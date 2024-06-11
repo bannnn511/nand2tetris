@@ -22,6 +22,12 @@ D;JEQ // if D == 0, goto White
 (Black)
 @place
 D=M
+@8192 // max screen size
+D=D-A
+@KBDCheck
+D;JGE
+@place
+D=M
 @SCREEN
 A=D+A // screen + offset
 M=-1
