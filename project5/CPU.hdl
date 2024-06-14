@@ -86,5 +86,7 @@ CHIP CPU {
 
     Or(a=jlt, b=jeq, out=jlteq);
     Or(a=jlteq, b=jgt, out=load);
+
+    // PC
     PC(in=aRegOut, load=load, inc=true, reset=reset, out[0..14]=pc);
 }
