@@ -44,3 +44,66 @@ func Test_parse(t *testing.T) {
 		})
 	}
 }
+
+func Test_parseCInstruction(t *testing.T) {
+	type args struct {
+		instruction string
+	}
+	tests := []struct {
+		name     string
+		args     args
+		wantDest string
+		wantComp string
+		wantJmp  string
+	}{
+		{
+			name:     "1. test_C_instruction_D=A",
+			args:     args{instruction: "D=A"},
+			wantDest: "D",
+			wantComp: "A",
+			wantJmp:  "",
+		},
+		{
+			name:     "2. test_C_instruction_D=D+A",
+			args:     args{instruction: "D=D+A"},
+			wantDest: "D",
+			wantComp: "D+A",
+			wantJmp:  "",
+		},
+		{
+			name:     "3. test_C_instruction_M=D",
+			args:     args{instruction: "M=D"},
+			wantDest: "M",
+			wantComp: "D",
+			wantJmp:  "",
+		},
+		{
+			name:     "3. test_C_instruction_0;JMP",
+			args:     args{instruction: "0;JMP"},
+			wantDest: "",
+			wantComp: "0",
+			wantJmp:  "JMP",
+		},
+		{
+			name:     "4. test_C_instruction_D;JEQ",
+			args:     args{instruction: "D;JEQ"},
+			wantDest: "",
+			wantComp: "D",
+			wantJmp:  "JEQ",
+		},
+	}
+
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			dest, comp, jmp, _ := parseCInstruction(tt.args.instruction)
+			if dest != tt.wantDest ||
+				comp != tt.wantComp ||
+				jmp != tt.wantJmp {
+				t.Errorf(
+					"parseCInstruction() = %v %v %v, want %v %v %v",
+					dest, comp, jmp, tt.wantDest, tt.wantComp, tt.wantJmp,
+				)
+			}
+		})
+	}
+}

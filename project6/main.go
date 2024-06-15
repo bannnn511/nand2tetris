@@ -2,10 +2,17 @@ package main
 
 import (
 	"bufio"
+	"errors"
 	"fmt"
 	"os"
 	"strconv"
 	"strings"
+)
+
+// Errors return by program.
+var (
+	ErrInvalidArguments    = errors.New("invalid number of arguments")
+	ErrInvalidCInstruction = errors.New("parseCInstruction: invalid C instruction")
 )
 
 func main() {
@@ -56,12 +63,13 @@ func main() {
 }
 
 // parse parses Hack language to Hack machine instruction
-//  1. if the instruction is @symbol; look up the symbol in the symbol table
+//  1. if instruction is @symbol; look up the symbol in the symbol table
 //     if symbol value is found, use value to complete the instruction ’s translation
 //     if not found:
 //     add (symbol,n) to the symbol table
 //     use n to complete the instruction translation
 //     n++
+//  2. if instruction is C-instruction, uses parseCInstruction
 func parse(sb *SymbolTable, instruction string) string {
 	machine := "0"
 	if instruction[0] == '@' {
@@ -79,6 +87,60 @@ func parse(sb *SymbolTable, instruction string) string {
 	}
 
 	return machine
+}
+
+// parseCInstruction parses the Hack C-instruction
+// symbolic: dest = comp; jump
+// comp is mandatory
+// if dest is empty; the = is ommited
+// if jump is empty; the ; is ommited
+//
+// destIndx and jmpIdx is used to separate dest, comp and jump
+func parseCInstruction(instruction string) (string, string, string, error) {
+	var (
+		dest    string
+		comp    string
+		jmp     string
+		destIdx int
+		jmpIdx  int
+	)
+	destIdx = strings.Index(instruction, "=")
+	if destIdx == -1 {
+		destIdx = 0
+	} else {
+		dest = instruction[0:destIdx]
+		destIdx++
+	}
+
+	jmpIdx = strings.Index(instruction, ";")
+	if jmpIdx == -1 {
+		jmpIdx = len(instruction)
+	} else {
+		jmp = instruction[jmpIdx+1:]
+	}
+
+	comp = instruction[destIdx:jmpIdx]
+
+	return dest, comp, jmp, nil
+}
+
+func code(dest, comp, jmp string) string {
+	machine := "111"
+	switch comp {
+	case "A":
+		machine += "110000"
+	}
+
+	switch dest {
+	case "D":
+		machine += "001100"
+	}
+
+	switch jmp {
+
+	}
+
+	return ""
 }
 
 type SymbolTable struct {
