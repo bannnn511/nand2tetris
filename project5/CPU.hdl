@@ -51,7 +51,7 @@ CHIP CPU {
         out[10]=cAluNx,
         out[11]=cAluZx,
         out[12]=cAorM,
-        out[15]=cType,
+        out[15]=cType
     );
     ALU(
         x=xIn,
@@ -62,7 +62,7 @@ CHIP CPU {
         no=cAluNo, 
         out=aluOut,out=outM, 
         zr=zero, 
-        ng=neg,
+        ng=neg
     );
 
     // A register
