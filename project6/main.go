@@ -71,6 +71,10 @@ func main() {
 //     n++
 //  2. if instruction is C-instruction, uses parseCInstruction
 func parse(sb *SymbolTable, instruction string) string {
+	if sb == nil {
+		return ""
+	}
+
 	machine := "0"
 	if instruction[0] == '@' {
 		symbol := instruction[1:]
@@ -84,6 +88,9 @@ func parse(sb *SymbolTable, instruction string) string {
 			value = int(v)
 		}
 		machine = fmt.Sprintf("%s%015b", machine, value)
+	} else {
+		dest, comp, jump, _ := parseCInstruction(instruction)
+		machine = code(dest, comp, jump)
 	}
 
 	return machine
@@ -124,23 +131,61 @@ func parseCInstruction(instruction string) (string, string, string, error) {
 	return dest, comp, jmp, nil
 }
 
+var compMap = map[string]string{
+	"0":   "0101010",
+	"1":   "0111111",
+	"-1":  "0111010",
+	"D":   "0001100",
+	"A":   "0110000",
+	"M":   "1110000",
+	"!D":  "0001101",
+	"!A":  "0110001",
+	"!M":  "1110001",
+	"-D":  "0001111",
+	"-A":  "0110011",
+	"-M":  "1110011",
+	"D+1": "0011111",
+	"A+1": "0110111",
+	"M+1": "1110111",
+	"D-1": "0001110",
+	"A-1": "0110010",
+	"M-1": "1110010",
+	"D+A": "0000010",
+	"D+M": "1000010",
+	"D-A": "0010011",
+	"D-M": "1010011",
+	"A-D": "0000111",
+	"M-D": "1000111",
+	"D&A": "0000000",
+	"D&M": "1000000",
+	"D|A": "0010101",
+	"D|M": "1010101",
+}
+
+var destMap = map[string]string{
+	"":    "000",
+	"M":   "001",
+	"D":   "010",
+	"DM":  "011",
+	"A":   "100",
+	"AM":  "101",
+	"AD":  "11O",
+	"ADM": "111",
+}
+
+var jumpMap = map[string]string{
+	"":    "000",
+	"JGT": "001",
+	"JEQ": "010",
+	"JGE": "011",
+	"JLT": "100",
+	"JNE": "101",
+	"JLE": "110",
+	"JMP": "111",
+}
+
 func code(dest, comp, jmp string) string {
-	machine := "111"
-	switch comp {
-	case "A":
-		machine += "110000"
-	}
-
-	switch dest {
-	case "D":
-		machine += "001100"
-	}
-
-	switch jmp {
-
-	}
-
-	return ""
+	return "111" + compMap[comp] + destMap[dest] + jumpMap[jmp]
 }
 
 type SymbolTable struct {

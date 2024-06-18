@@ -107,3 +107,54 @@ func Test_parseCInstruction(t *testing.T) {
 		})
 	}
 }
+
+func Test_code(t *testing.T) {
+	type args struct {
+		dest, comp, jump string
+	}
+	tests := []struct {
+		name string
+		args args
+		want string
+	}{
+		{
+			name: "1. test_code_D=A",
+			args: args{
+				dest: "D",
+				comp: "A",
+				jump: "",
+			},
+			want: "1110110000010000",
+		},
+		{
+			name: "2. test_code_D=D+A",
+			args: args{
+				dest: "D",
+				comp: "D+A",
+				jump: "",
+			},
+			want: "1110000010010000",
+		},
+		{
+			name: "3. test_code_M=D",
+			args: args{
+				dest: "M",
+				comp: "D",
+				jump: "",
+			},
+			want: "1110001100001000",
+		},
+	}
+
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			got := code(tt.args.dest, tt.args.comp, tt.args.jump)
+			if tt.want != got {
+				t.Errorf(
+					"code() = %v, want %v",
+					got, tt.want,
+				)
+			}
+		})
+	}
+}
