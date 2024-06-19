@@ -21,24 +21,41 @@ func Test_parse(t *testing.T) {
 		want string
 	}{
 		{
-			name: "test_A_instruction_@value",
+			name: "1. test_A_instruction_@value",
 			args: args{
 				instruction: "@2",
 			},
 			want: "0000000000000010",
 		},
 		{
-			name: "test_A_instruction_@value",
+			name: "2. test_A_instruction_@value",
 			args: args{
 				instruction: "@3",
 			},
 			want: "0000000000000011",
 		},
+		{
+			name: "3. test_C_instruction_D=A",
+			args: args{
+				instruction: "D=A",
+			},
+			want: "1110110000010000",
+		},
+		{
+			name: "4. test_C_instruction_D=D+A",
+			args: args{
+				instruction: "D=D+A",
+			},
+			want: "1110000010010000",
+		},
 	}
 
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			if got := parse(sb, tt.args.instruction); got != tt.want {
+			if got, err := parse(sb, tt.args.instruction); got != tt.want {
+				if err != nil {
+					t.Errorf("parse() error = %v", err)
+				}
 				t.Errorf("parse() = %v, want %v", got, tt.want)
 			}
 		})

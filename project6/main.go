@@ -5,6 +5,7 @@ import (
 	"errors"
 	"fmt"
 	"os"
+	"path/filepath"
 	"strconv"
 	"strings"
 )
@@ -33,10 +34,14 @@ func main() {
 	r := bufio.NewScanner(file)
 
 	// First pass
-	// remove comments and replace labels
+	// remove comments and register (xxx) labels
 	lines := make([]string, 0, 50)
+	var lineNo uint32 = 0
 	for r.Scan() {
-		line := r.Text()
+		line := strings.TrimSpace(r.Text())
+		if len(line) == 0 {
+			continue
+		}
 		for i, word := range line {
 			if word == '/' {
 				line = line[0:i]
@@ -47,19 +52,54 @@ func main() {
 			continue
 		}
 		if line[0] == '(' {
+			table.Setn(lineNo)
 			table.AddSymbol(line[1 : len(line)-1])
-			break
+			continue
+		} else {
+			lineNo++
 		}
 		lines = append(lines, strings.TrimSpace(line))
 	}
 
+	// debug lines and symbol tables
+	// for i, line := range lines {
+	// 	fmt.Println(i, line)
+	// }
+	// fmt.Println("========")
+	// for i, sb := range table.m {
+	// 	fmt.Println(i, sb)
+	// }
+
+	// decode instruction
+	table.Setn(16)
+	machineCodes := make([]string, 0, len(lines))
 	for _, line := range lines {
-		fmt.Println(parse(table, line))
+		if len(line) == 0 {
+			continue
+		}
+		machine, err := parse(table, line)
+		if err != nil {
+			printErr(err.Error())
+		}
+		machineCodes = append(machineCodes, machine)
 	}
 
-	// for symbol, value := range table.m {
-	// 	fmt.Println(symbol, value)
-	// }
+	// write to file
+	base := filepath.Base(os.Args[1])
+	fileNames := strings.Split(base, ".")
+	destNames := fileNames[0] + ".hack"
+	codeFile, err := os.Create(destNames)
+	defer codeFile.Close()
+	if err != nil {
+		printErr(err.Error())
+	}
+
+	for _, machineCode := range machineCodes {
+		_, err := codeFile.WriteString(machineCode + "\n")
+		if err != nil {
+			printErr(err.Error())
+		}
+	}
 }
 
 // parse parses Hack language to Hack machine instruction
@@ -70,9 +110,9 @@ func main() {
 //     use n to complete the instruction translation
 //     n++
 //  2. if instruction is C-instruction, uses parseCInstruction
-func parse(sb *SymbolTable, instruction string) string {
+func parse(sb *SymbolTable, instruction string) (string, error) {
 	if sb == nil {
-		return ""
+		return "", ErrInvalidCInstruction
 	}
 
 	machine := "0"
@@ -89,11 +129,14 @@ func parse(sb *SymbolTable, instruction string) string {
 		}
 		machine = fmt.Sprintf("%s%015b", machine, value)
 	} else {
-		dest, comp, jump, _ := parseCInstruction(instruction)
+		dest, comp, jump, err := parseCInstruction(instruction)
+		if err != nil {
+			return "", ErrInvalidCInstruction
+		}
 		machine = code(dest, comp, jump)
 	}
 
-	return machine
+	return machine, nil
 }
 
 // parseCInstruction parses the Hack C-instruction
