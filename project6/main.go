@@ -89,7 +89,11 @@ func main() {
 	fileNames := strings.Split(base, ".")
 	destNames := fileNames[0] + ".hack"
 	codeFile, err := os.Create(destNames)
-	defer codeFile.Close()
+	defer func(fs *os.File) {
+		if err := fs.Close(); err != nil {
+			printErr(err.Error())
+		}
+	}(codeFile)
 	if err != nil {
 		printErr(err.Error())
 	}
