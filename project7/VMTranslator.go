@@ -228,7 +228,7 @@ func (t *Translator) WriteArithmetic(op string) string {
 		sb.WriteString(
 			gotoTopmostStackVal +
 				popIntoD +
-				"M=D-M\n" +
+				"M=M-D\n" +
 				decrementSp)
 	case "neg":
 		sb.WriteString(
