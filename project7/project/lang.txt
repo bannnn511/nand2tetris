@@ -1,2 +1,18 @@
-go
-debug
+"An Ha: 
+go:
+    - portrays good understanding of Go
+    - knows how to use goroutine, channel
+    - good understanding of OS (io bound, cpu bound task, context switching)
+    - good understanding Go Scheduler
+db:
+    - has experience in building data pipeline from MongoDB to Postgres
+    - good understanding of Mongo DB query
+    - has experience in large scale database migration
+microservices:
+    - good understanding of his team SDK message queue
+	- understanding of how to scale un-ordered messages
+    - has knowledge and experience of network protocol
+    - very good understanding of internal systems, can explained trade-offs
+    - understanding of GRPC trade-offs at load balancing
+conclusion:
+    - dont need to take test,  passed at SR level

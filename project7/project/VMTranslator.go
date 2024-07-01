@@ -66,7 +66,7 @@ func main() {
 	}
 	codeFile.WriteString("(END)\n" +
 		"@END\n" +
-		"0; JMP\n")
+		"0;JMP\n")
 }
 
 func hasComment(line string) bool {
@@ -225,7 +225,7 @@ func (t *Translator) WriteArithmetic(op string) string {
 		sb +=
 			gotoTopmostStackVal +
 				popIntoD +
-				"M=D-M\n" +
+				"M=M-D\n" +
 				decrementSp
 	case "neg":
 		sb +=
