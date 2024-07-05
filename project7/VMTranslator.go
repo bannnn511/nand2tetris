@@ -44,19 +44,34 @@ func main() {
 	// Read file
 	parser := NewParser(file)
 	translator := NewTranslator(destNames)
-	i := 1
+	i := 0
 	for parser.hasMoreCommand() {
-		parser.advance()
 		cmd := ""
-		if parser.CommandType() == CARITHMETIC {
+		if i == 0 {
+			cmd = translator.WriteInit()
+			_, _ = codeFile.WriteString(cmd)
+			i++
+			continue
+		}
+
+		parser.advance()
+
+		switch parser.CommandType() {
+		case CARITHMETIC:
 			cmd = translator.WriteArithmetic(parser.Arg1())
-		}
-		if parser.CommandType() == CPUSH {
+		case CPUSH:
 			cmd = translator.WritePushPop(CPUSH, parser.Arg1(), parser.Arg2())
-		}
-		if parser.CommandType() == CPOP {
+		case CPOP:
 			cmd = translator.WritePushPop(CPOP, parser.Arg1(), parser.Arg2())
+		case CLABEL:
+			cmd = translator.WriteLabel(parser.Arg1())
+		case CGOTO:
+			cmd = translator.WriteGoto(parser.Arg1())
+		case CIF:
+			cmd = translator.WriteIfGoto(parser.Arg1())
 		}
+
+		// for debugging command
 		_, _ = codeFile.WriteString("// " + parser.arg0 + " " + parser.arg1 + " " + parser.arg2 + "\n")
 		_, err := codeFile.WriteString(cmd)
 		if err != nil {
@@ -64,9 +79,13 @@ func main() {
 		}
 		i++
 	}
-	codeFile.WriteString("(END)\n" +
+
+	_, err = codeFile.WriteString("(END)\n" +
 		"@END\n" +
-		"0; JMP\n")
+		"0;JMP\n")
+	if err != nil {
+		printErr(err.Error())
+	}
 }
 
 func hasComment(line string) bool {
@@ -122,21 +141,6 @@ func NewTranslator(fileName string) *Translator {
 	}
 }
 
-// WritePushPop implements CodeWriter.
-func (t *Translator) WritePushPop(cmdType CommandType, segment string, idx int) string {
-	cmd := ""
-	addr := fmt.Sprintf("%d", idx)
-
-	// PUSH
-	if cmdType == CPUSH {
-		cmd = t.WritePush(segment, addr)
-	} else if cmdType == CPOP {
-		cmd = t.WritePop(segment, addr)
-	}
-
-	return cmd
-}
-
 func (t *Translator) getSegment(segment string, addr string) string {
 	var sb strings.Builder
 	if segment == "static" {
@@ -162,6 +166,56 @@ func (t *Translator) getSegment(segment string, addr string) string {
 	}
 
 	return sb.String()
+}
+
+func (t *Translator) WriteInit() string {
+	var sb strings.Builder
+
+	// set sp 256
+	sb.WriteString(
+		"@256\n" +
+			"D=A\n" +
+			"@SP\n" +
+			"M=D\n")
+
+	// set local 300
+	sb.WriteString(
+		"@300\n" +
+			"D=A\n" +
+			"@LCL\n" +
+			"M=D\n")
+
+	// set argument 400
+	sb.WriteString(
+		"@400\n" +
+			"D=A\n" +
+			"@ARG\n" +
+			"M=D\n")
+
+	// set argument[0] 3
+	sb.WriteString(
+		"@3\n" +
+			"D=A\n" +
+			"@ARG\n" +
+			"A=M\n" +
+			"M=D\n")
+
+	return sb.String()
+}
+
+// WritePushPop implements CodeWriter.
+func (t *Translator) WritePushPop(cmdType CommandType, segment string, idx int) string {
+	cmd := ""
+	addr := fmt.Sprintf("%d", idx)
+
+	// PUSH
+	if cmdType == CPUSH {
+		cmd = t.WritePush(segment, addr)
+	} else if cmdType == CPOP {
+		cmd = t.WritePop(segment, addr)
+	}
+
+	return cmd
 }
 
 func (t *Translator) WritePush(segment string, addr string) string {
@@ -274,6 +328,31 @@ func (t *Translator) WriteArithmetic(op string) string {
 	return sb.String()
 }
 
+func (t *Translator) WriteLabel(label string) string {
+	return "(" + label + ")\n"
+}
+
+func (t *Translator) WriteGoto(label string) string {
+	var sb strings.Builder
+	sb.WriteString(
+		"@" + label + "\n" +
+			"0;JUMP\n")
+
+	return sb.String()
+}
+
+func (t *Translator) WriteIfGoto(label string) string {
+	var sb strings.Builder
+	sb.WriteString(
+		gotoTopmostStackVal +
+			popIntoD +
+			decrementSp +
+			"@" + label + "\n" +
+			"D;JNE\n")
+
+	return sb.String()
+}
+
 func (t *Translator) writeComparison(operator string) string {
 	var sb strings.Builder
 	jumpNot := fmt.Sprintf("NOT_%v_%d", operator, labelCount[operator])
@@ -354,11 +433,18 @@ func (p *Parser) advance() {
 	}
 
 	p.arg0 = cmds[0]
-	if cmds[0] == "push" {
+	switch cmds[0] {
+	case "push":
 		p.mCmdType = CPUSH
-	} else if cmds[0] == "pop" {
+	case "pop":
 		p.mCmdType = CPOP
-	} else {
+	case "label":
+		p.mCmdType = CLABEL
+	case "goto":
+		p.mCmdType = CGOTO
+	case "if-goto":
+		p.mCmdType = CIF
+	default:
 		p.mCmdType = CARITHMETIC
 	}
 }
@@ -366,6 +452,11 @@ func (p *Parser) advance() {
 func (p *Parser) Arg1() string {
 	if p.CommandType() == CARITHMETIC {
 		return p.arg0
+	}
+	if p.CommandType() == CLABEL ||
+		p.CommandType() == CGOTO ||
+		p.CommandType() == CIF {
+		return p.arg1
 	}
 
 	return p.arg1
