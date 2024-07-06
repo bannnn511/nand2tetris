@@ -10,6 +10,10 @@ import (
 	"strings"
 )
 
+// INIT_SEGMENT is the segment number where the program starts.
+// for testing with VM_EMULATOR
+const INIT_SEGMENT = 0
+
 func main() {
 	if len(os.Args) < 2 {
 		printErr("invalid number of arguments")
@@ -80,8 +84,8 @@ func main() {
 		i++
 	}
 
-	_, err = codeFile.WriteString("(END)\n" +
-		"@END\n" +
+	_, err = codeFile.WriteString("(END_PROGRAM)\n" +
+		"@END_PROGRAM\n" +
 		"0;JMP\n")
 	if err != nil {
 		printErr(err.Error())
@@ -168,15 +172,8 @@ func (t *Translator) getSegment(segment string, addr string) string {
 	return sb.String()
 }
 
-func (t *Translator) WriteInit() string {
+func (t *Translator) initSegment() string {
 	var sb strings.Builder
-
-	// set sp 256
-	sb.WriteString(
-		"@256\n" +
-			"D=A\n" +
-			"@SP\n" +
-			"M=D\n")
 
 	// set local 300
 	sb.WriteString(
@@ -192,13 +189,37 @@ func (t *Translator) WriteInit() string {
 			"@ARG\n" +
 			"M=D\n")
 
-	// set argument[0] 3
+	// set argument[0] 6
 	sb.WriteString(
-		"@3\n" +
+		"@6\n" +
 			"D=A\n" +
 			"@ARG\n" +
 			"A=M\n" +
 			"M=D\n")
+	// set argument[1] 3000,
+	sb.WriteString(
+		"@3000\n" +
+			"D=A\n" +
+			"@ARG\n" +
+			"A=M+1\n" +
+			"M=D\n")
+
+	return sb.String()
+}
+
+func (t *Translator) WriteInit() string {
+	var sb strings.Builder
+
+	// set sp 256
+	sb.WriteString(
+		"@256\n" +
+			"D=A\n" +
+			"@SP\n" +
+			"M=D\n")
+
+	if INIT_SEGMENT > 0 {
+		sb.WriteString(t.initSegment())
+	}
 
 	return sb.String()
 }
@@ -336,7 +357,7 @@ func (t *Translator) WriteGoto(label string) string {
 	var sb strings.Builder
 	sb.WriteString(
 		"@" + label + "\n" +
-			"0;JUMP\n")
+			"0;JMP\n")
 
 	return sb.String()
 }
@@ -379,6 +400,7 @@ func (t *Translator) writeComparison(operator string) string {
 type CommandType string
 
 const (
+	CCMT        = "C_CMT" // comment
 	CPUSH       = "C_PUSH"
 	CPOP        = "C_POP"
 	CARITHMETIC = "C_ARITHMETIC"
@@ -419,6 +441,7 @@ func (p *Parser) advance() {
 		line = removeComment(line)
 	}
 	if len(line) == 0 {
+		p.mCmdType = CCMT
 		return
 	}
 
