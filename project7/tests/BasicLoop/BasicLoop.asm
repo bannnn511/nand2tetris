@@ -15,14 +15,7 @@ D=A
 @ARG
 A=M
 M=D
-//   
-//   
-//   
-//   
-//   
-//   
-//   
-//   
+
 // push constant 0
 @0
 D=A

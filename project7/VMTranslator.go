@@ -10,10 +10,6 @@ import (
 	"strings"
 )
 
-// INIT_SEGMENT is the segment number where the program starts.
-// for testing with VM_EMULATOR
-const INIT_SEGMENT = 0
-
 func main() {
 	if len(os.Args) < 2 {
 		printErr("invalid number of arguments")
@@ -73,6 +69,12 @@ func main() {
 			cmd = translator.WriteGoto(parser.Arg1())
 		case CIF:
 			cmd = translator.WriteIfGoto(parser.Arg1())
+		case CFUNCTION:
+			cmd = translator.WriteFunction(parser.Arg1(), parser.Arg2())
+		case CRETURN:
+			cmd = translator.WriteReturn()
+		case CCALL:
+			cmd = translator.WriteCall(parser.Arg1(), parser.Arg2())
 		}
 
 		// for debugging command
@@ -125,9 +127,10 @@ var SegmentPointer = map[string]string{
 }
 
 var labelCount = map[string]int{
-	"gt": 0,
-	"lt": 0,
-	"eq": 0,
+	"gt":     0,
+	"lt":     0,
+	"eq":     0,
+	"return": 0,
 }
 var cmpFalse = map[string]string{
 	"gt": "JLE", // greater than == not less than or equal to
@@ -175,33 +178,102 @@ func (t *Translator) getSegment(segment string, addr string) string {
 func (t *Translator) initSegment() string {
 	var sb strings.Builder
 
-	// set local 300
+	// set sp 317
 	sb.WriteString(
-		"@300\n" +
+		"@317\n" +
+			"D=A\n" +
+			"@SP\n" +
+			"M=D\n")
+
+	// set local 317
+	sb.WriteString(
+		"@317\n" +
 			"D=A\n" +
 			"@LCL\n" +
 			"M=D\n")
 
-	// set argument 400
+	// set argument 310
 	sb.WriteString(
-		"@400\n" +
+		"@310\n" +
 			"D=A\n" +
 			"@ARG\n" +
 			"M=D\n")
 
-	// set argument[0] 6
-	sb.WriteString(
-		"@6\n" +
-			"D=A\n" +
-			"@ARG\n" +
-			"A=M\n" +
-			"M=D\n")
-	// set argument[1] 3000,
+	// set this 3000
 	sb.WriteString(
 		"@3000\n" +
 			"D=A\n" +
-			"@ARG\n" +
-			"A=M+1\n" +
+			"@THIS\n" +
+			"M=D\n")
+
+	// set that 4000
+	sb.WriteString(
+		"@4000\n" +
+			"D=A\n" +
+			"@THAT\n" +
+			"M=D\n")
+
+	// set argument[0] 1234
+	sb.WriteString(
+		"@ARG\n" +
+			"D=M\n" +
+			"@0\n" +
+			"D=D+A\n" +
+			"@1234\n" +
+			"M=D\n")
+
+	// set argument[1] 37
+	sb.WriteString(
+		"@ARG\n" +
+			"D=M\n" +
+			"@1\n" +
+			"D=D+A\n" +
+			"@37\n" +
+			"M=D\n")
+
+	// set argument[2] 9
+	sb.WriteString(
+		"@ARG\n" +
+			"D=M\n" +
+			"@2\n" +
+			"D=D+A\n" +
+			"@9\n" +
+			"M=D\n")
+
+	// set argument[3] 305
+	sb.WriteString(
+		"@ARG\n" +
+			"D=M\n" +
+			"@3\n" +
+			"D=D+A\n" +
+			"@305\n" +
+			"M=D\n")
+
+	// set argument[4] 300
+	sb.WriteString(
+		"@ARG\n" +
+			"D=M\n" +
+			"@4\n" +
+			"D=D+A\n" +
+			"@300\n" +
+			"M=D\n")
+
+	// set argument[5] 3010
+	sb.WriteString(
+		"@ARG\n" +
+			"D=M\n" +
+			"@5\n" +
+			"D=D+A\n" +
+			"@3010\n" +
+			"M=D\n")
+
+	// set argument[6] 4010
+	sb.WriteString(
+		"@ARG\n" +
+			"D=M\n" +
+			"@6\n" +
+			"D=D+A\n" +
+			"@4010\n" +
 			"M=D\n")
 
 	return sb.String()
@@ -210,17 +282,7 @@ func (t *Translator) initSegment() string {
 func (t *Translator) WriteInit() string {
 	var sb strings.Builder
 
-	// set sp 256
-	sb.WriteString(
-		"@256\n" +
-			"D=A\n" +
-			"@SP\n" +
-			"M=D\n")
-
-	if INIT_SEGMENT > 0 {
-		sb.WriteString(t.initSegment())
-	}
-
+	sb.WriteString(t.initSegment())
 	return sb.String()
 }
 
@@ -374,6 +436,63 @@ func (t *Translator) WriteIfGoto(label string) string {
 	return sb.String()
 }
 
+func (t *Translator) WriteFunction(label string, nVars int) string {
+	var sb strings.Builder
+	sb.WriteString(
+		"(" + label + ")\n")
+
+	// init variable to )
+	for i := 0; i < nVars; i++ {
+		sb.WriteString("@SP\n" +
+			"A=M\n" +
+			"M=0\n" +
+			"@SP\n" +
+			"M=M+1\n")
+	}
+
+	return sb.String()
+}
+
+func (t *Translator) WriteReturn() string {
+	var sb strings.Builder
+	sb.WriteString("@LCL\n" + "D=M\n" + "@R13\n" + "M=D\n")
+	sb.WriteString("@5\n" + "A=D-A\n" + "M=D\n" + "@R14\n" + "M=D\n")
+	sb.WriteString(gotoTopmostStackVal +
+		popIntoD +
+		"@ARG\n" +
+		"A=M\n" +
+		"M=D\n")
+	sb.WriteString("@ARG\n" +
+		"D=M+1\n" +
+		"@SP\n" +
+		"M=D\n")
+	sb.WriteString("@R13\n" + "AM=M-1\n" + "D=M\n" + "@THAT\n" + "M=D\n")
+	sb.WriteString("@R13\n" + "AM=M-1\n" + "D=M\n" + "@THIS\n" + "M=D\n")
+	sb.WriteString("@R13\n" + "AM=M-1\n" + "D=M\n" + "@ARG\n" + "M=D\n")
+	sb.WriteString("@R13\n" + "AM=M-1\n" + "D=M\n" + "@LCL\n" + "M=D\n")
+	sb.WriteString("@R14\n" + "A=M\n" + "0;JMP\n")
+
+	return sb.String()
+}
+
+func (t *Translator) WriteCall(functionName string, nVars int) string {
+	var sb strings.Builder
+	counter := labelCount[functionName]
+	returnAddr := fmt.Sprintf("RETURN_ADDR_@%s_%d\n", functionName, counter)
+	labelCount[functionName]++
+	sb.WriteString(returnAddr + "D=A\n" + "@SP\n" + "A=M\n" + "M=D\n" + "@SP\n" + "M=M+1\n")
+	sb.WriteString("@LCL\n" + "D=M\n" + "@SP\n" + "A=M\n" + "M=D\n" + "@SP\n" + "M=M+1\n")
+	sb.WriteString("@ARG\n" + "D=M\n" + "@SP\n" + "A=M\n" + "M=D\n" + "@SP\n" + "M=M+1\n")
+	sb.WriteString("@THIS\n" + "D=M\n" + "@SP\n" + "A=M\n" + "M=D\n" + "@SP\n" + "M=M+1\n")
+	sb.WriteString("@THAT\n" + "D=M\n" + "@SP\n" + "A=M\n" + "M=D\n" + "@SP\n" + "M=M+1\n")
+	sb.WriteString("@SP\n" + "D=M\n" + "@5\n" + "D=D-A\n" + "@" + returnAddr + "\n" + "D=D-A\n" + "@ARG\n" + "M=D\n")
+	sb.WriteString("@SP\n" + "D=M\n" + "@LCL\n" + "M=D\n")
+	sb.WriteString("@" + functionName + "\n" + "0;JMP\n")
+	sb.WriteString("(" + returnAddr + ")\n")
+
+	return sb.String()
+}
+
 func (t *Translator) writeComparison(operator string) string {
 	var sb strings.Builder
 	jumpNot := fmt.Sprintf("NOT_%v_%d", operator, labelCount[operator])
@@ -467,6 +586,10 @@ func (p *Parser) advance() {
 		p.mCmdType = CGOTO
 	case "if-goto":
 		p.mCmdType = CIF
+	case "function":
+		p.mCmdType = CFUNCTION
+	case "return":
+		p.mCmdType = CRETURN
 	default:
 		p.mCmdType = CARITHMETIC
 	}
@@ -475,11 +598,6 @@ func (p *Parser) advance() {
 func (p *Parser) Arg1() string {
 	if p.CommandType() == CARITHMETIC {
 		return p.arg0
-	}
-	if p.CommandType() == CLABEL ||
-		p.CommandType() == CGOTO ||
-		p.CommandType() == CIF {
-		return p.arg1
 	}
 
 	return p.arg1
