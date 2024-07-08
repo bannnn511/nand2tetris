@@ -4,6 +4,7 @@ import (
 	"bufio"
 	"fmt"
 	"io"
+	"io/ioutil"
 	"os"
 	"strconv"
 	"strings"
@@ -47,6 +48,9 @@ func main() {
 		if err != nil {
 			printErr(err.Error())
 		}
+		if file.Name() == "Main.vm" {
+			ShouldCallSysInit = true
+		}
 		vmFiles = append(vmFiles, *file)
 		fileName := os.Args[1][:strings.Index(os.Args[1], ".vm")]
 		outFile = fmt.Sprintf("%v.asm", fileName)
@@ -67,7 +71,7 @@ func main() {
 		printErr("failed to create file")
 	}
 	// Read file
-	translator := NewTranslator(outFile)
+	translator := NewTranslator(fileInfo.Name())
 
 	i := 0
 	for _, file := range vmFiles {
@@ -124,13 +128,16 @@ func main() {
 }
 
 func getVmFiles(dir string) []os.File {
-	files, err := os.ReadDir(dir)
+	files, err := ioutil.ReadDir(dir)
 	vmFiles := make([]os.File, 0, len(files))
 	if err != nil {
 		printErr(err.Error())
 	}
 
 	for _, file := range files {
+		if file.Name() == "Main.vm" {
+			ShouldCallSysInit = true
+		}
 		if strings.HasSuffix(file.Name(), ".vm") {
 			file, err := os.OpenFile(dir+"/"+file.Name(), os.O_RDONLY, 0)
 			if err != nil {
@@ -232,8 +239,16 @@ func (t *Translator) initSegment() string {
 			"@SP\n" +
 			"M=D\n"
 
-	// call Sys.init
+	// set local 300,
+	//set argument 400,
+	//set argument[0] 3
+	//
+	// sb += "@300\n" + "D=A\n" + "@" + SegmentPointer["local"] + "\n" + "M=D\n"
+	// sb += "@400\n" + "D=A\n" + "@" + SegmentPointer["argument"] + "\n" + "M=D\n"
+	// sb += "@3\n" + "D=A\n" + "@" + SegmentPointer["argument"] + "\n" + "A=M\n" + "M=D\n"
+
 	sb += t.WriteCall("Sys.init", 0)
+
 	return sb
 }
 
@@ -417,7 +432,7 @@ func (t *Translator) WriteFunction(label string, nVars int) string {
 func (t *Translator) WriteReturn() string {
 	sb := ""
 	sb += "@LCL\n" + "D=M\n" + "@R13\n" + "M=D\n"
-	sb += "@5\n" + "A=D-A\n" + "M=D\n" + "@R14\n" + "M=D\n"
+	sb += "@5\n" + "A=D-A\n" + "D=M\n" + "@R14\n" + "M=D\n"
 	sb += gotoTopmostStackVal +
 		popIntoD +
 		"@ARG\n" +
@@ -446,7 +461,7 @@ func (t *Translator) WriteCall(functionName string, nVars int) string {
 	sb += "@ARG\n" + "D=M\n" + "@SP\n" + "A=M\n" + "M=D\n" + "@SP\n" + "M=M+1\n"
 	sb += "@THIS\n" + "D=M\n" + "@SP\n" + "A=M\n" + "M=D\n" + "@SP\n" + "M=M+1\n"
 	sb += "@THAT\n" + "D=M\n" + "@SP\n" + "A=M\n" + "M=D\n" + "@SP\n" + "M=M+1\n"
-	sb += "@SP\n" + "D=M\n" + "@5\n" + "D=D-A\n" + "@" + returnAddr + "\n" + "D=D-A\n" + "@ARG\n" + "M=D\n"
+	sb += "@SP\n" + "D=M\n" + "@5\n" + "D=D-A\n" + "@" + fmt.Sprintf("%d", nVars) + "\n" + "D=D-A\n" + "@ARG\n" + "M=D\n"
 	sb += "@SP\n" + "D=M\n" + "@LCL\n" + "M=D\n"
 	sb += "@" + functionName + "\n" + "0;JMP\n"
 	sb += "(" + returnAddr + ")\n"
