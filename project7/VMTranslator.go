@@ -5,15 +5,18 @@ import (
 	"fmt"
 	"io"
 	"os"
-	"path/filepath"
 	"strconv"
 	"strings"
 )
+
+var ShouldCallSysInit = false
 
 func main() {
 	if len(os.Args) < 2 {
 		printErr("invalid number of arguments")
 	}
+
+	vmFiles := make([]os.File, 0)
 
 	// Open file
 	file, err := os.OpenFile(os.Args[1], os.O_RDONLY, 0)
@@ -22,12 +25,35 @@ func main() {
 	}
 	defer file.Close()
 
-	base := filepath.Base(os.Args[1])
-	fileNames := strings.Split(base, ".")
-	destNames := fileNames[0] + ".asm"
+	fileInfo, err := file.Stat()
+	if err != nil {
+		printErr(err.Error())
+	}
 
-	fileName := os.Args[1][:strings.Index(os.Args[1], ".vm")]
-	codeFile, err := os.Create(fmt.Sprintf("%v.asm", fileName))
+	outFile := ""
+	if fileInfo.IsDir() {
+		// is a file
+		vmFiles = getVmFiles(os.Args[1])
+		outFile = fmt.Sprintf("%v/%v.asm", os.Args[1], fileInfo.Name())
+		defer func(fss []os.File) {
+			for _, fs := range fss {
+				if err := fs.Close(); err != nil {
+					printErr(err.Error())
+				}
+			}
+		}(vmFiles)
+	} else {
+		// is a directory
+		if err != nil {
+			printErr(err.Error())
+		}
+		vmFiles = append(vmFiles, *file)
+		fileName := os.Args[1][:strings.Index(os.Args[1], ".vm")]
+		outFile = fmt.Sprintf("%v.asm", fileName)
+	}
+
+	codeFile, err := os.Create(outFile)
+
 	defer func(fs *os.File) {
 		if err := fs.Close(); err != nil {
 			printErr(err.Error())
@@ -40,50 +66,53 @@ func main() {
 	if codeFile == nil {
 		printErr("failed to create file")
 	}
-
 	// Read file
-	parser := NewParser(file)
-	translator := NewTranslator(destNames)
+	translator := NewTranslator(outFile)
+
 	i := 0
-	for parser.hasMoreCommand() {
-		cmd := ""
-		if i == 0 {
-			cmd = translator.WriteInit()
-			_, _ = codeFile.WriteString(cmd)
+	for _, file := range vmFiles {
+		parser := NewParser(&file)
+		for parser.hasMoreCommand() {
+			cmd := ""
+			if i == 0 {
+				cmd = translator.WriteInit()
+				_, _ = codeFile.WriteString(cmd)
+				i++
+				continue
+			}
+
+			parser.advance()
+
+			switch parser.CommandType() {
+			case CARITHMETIC:
+				cmd = translator.WriteArithmetic(parser.Arg1())
+			case CPUSH:
+				cmd = translator.WritePushPop(CPUSH, parser.Arg1(), parser.Arg2())
+			case CPOP:
+				cmd = translator.WritePushPop(CPOP, parser.Arg1(), parser.Arg2())
+			case CLABEL:
+				cmd = translator.WriteLabel(parser.Arg1())
+			case CGOTO:
+				cmd = translator.WriteGoto(parser.Arg1())
+			case CIF:
+				cmd = translator.WriteIfGoto(parser.Arg1())
+			case CFUNCTION:
+				cmd = translator.WriteFunction(parser.Arg1(), parser.Arg2())
+			case CRETURN:
+				cmd = translator.WriteReturn()
+			case CCALL:
+				cmd = translator.WriteCall(parser.Arg1(), parser.Arg2())
+			}
+
+			// for debugging command
+			_, _ = codeFile.WriteString("// " + parser.arg0 + " " + parser.arg1 + " " + parser.arg2 + "\n")
+			_, err := codeFile.WriteString(cmd)
+			if err != nil {
+				printErr(err.Error())
+			}
 			i++
-			continue
 		}
 
-		parser.advance()
-
-		switch parser.CommandType() {
-		case CARITHMETIC:
-			cmd = translator.WriteArithmetic(parser.Arg1())
-		case CPUSH:
-			cmd = translator.WritePushPop(CPUSH, parser.Arg1(), parser.Arg2())
-		case CPOP:
-			cmd = translator.WritePushPop(CPOP, parser.Arg1(), parser.Arg2())
-		case CLABEL:
-			cmd = translator.WriteLabel(parser.Arg1())
-		case CGOTO:
-			cmd = translator.WriteGoto(parser.Arg1())
-		case CIF:
-			cmd = translator.WriteIfGoto(parser.Arg1())
-		case CFUNCTION:
-			cmd = translator.WriteFunction(parser.Arg1(), parser.Arg2())
-		case CRETURN:
-			cmd = translator.WriteReturn()
-		case CCALL:
-			cmd = translator.WriteCall(parser.Arg1(), parser.Arg2())
-		}
-
-		// for debugging command
-		_, _ = codeFile.WriteString("// " + parser.arg0 + " " + parser.arg1 + " " + parser.arg2 + "\n")
-		_, err := codeFile.WriteString(cmd)
-		if err != nil {
-			printErr(err.Error())
-		}
-		i++
 	}
 
 	_, err = codeFile.WriteString("(END_PROGRAM)\n" +
@@ -92,6 +121,26 @@ func main() {
 	if err != nil {
 		printErr(err.Error())
 	}
+}
+
+func getVmFiles(dir string) []os.File {
+	files, err := os.ReadDir(dir)
+	vmFiles := make([]os.File, 0, len(files))
+	if err != nil {
+		printErr(err.Error())
+	}
+
+	for _, file := range files {
+		if strings.HasSuffix(file.Name(), ".vm") {
+			file, err := os.OpenFile(dir+"/"+file.Name(), os.O_RDONLY, 0)
+			if err != nil {
+				printErr(err.Error())
+			}
+			vmFiles = append(vmFiles, *file)
+		}
+	}
+
+	return vmFiles
 }
 
 func hasComment(line string) bool {
@@ -178,103 +227,17 @@ func (t *Translator) getSegment(segment string, addr string) string {
 func (t *Translator) initSegment() string {
 	var sb strings.Builder
 
-	// set sp 317
-	sb.WriteString(
-		"@317\n" +
-			"D=A\n" +
-			"@SP\n" +
-			"M=D\n")
+	sb.WriteString("@256\n" +
+		"D=A\n" +
+		"@SP\n" +
+		"M=D\n")
 
-	// set local 317
-	sb.WriteString(
-		"@317\n" +
-			"D=A\n" +
-			"@LCL\n" +
-			"M=D\n")
-
-	// set argument 310
-	sb.WriteString(
-		"@310\n" +
-			"D=A\n" +
-			"@ARG\n" +
-			"M=D\n")
-
-	// set this 3000
-	sb.WriteString(
-		"@3000\n" +
-			"D=A\n" +
-			"@THIS\n" +
-			"M=D\n")
-
-	// set that 4000
-	sb.WriteString(
-		"@4000\n" +
-			"D=A\n" +
-			"@THAT\n" +
-			"M=D\n")
-
-	// set argument[0] 1234
-	sb.WriteString(
-		"@ARG\n" +
-			"D=M\n" +
-			"@0\n" +
-			"D=D+A\n" +
-			"@1234\n" +
-			"M=D\n")
-
-	// set argument[1] 37
-	sb.WriteString(
-		"@ARG\n" +
-			"D=M\n" +
-			"@1\n" +
-			"D=D+A\n" +
-			"@37\n" +
-			"M=D\n")
-
-	// set argument[2] 9
-	sb.WriteString(
-		"@ARG\n" +
-			"D=M\n" +
-			"@2\n" +
-			"D=D+A\n" +
-			"@9\n" +
-			"M=D\n")
-
-	// set argument[3] 305
-	sb.WriteString(
-		"@ARG\n" +
-			"D=M\n" +
-			"@3\n" +
-			"D=D+A\n" +
-			"@305\n" +
-			"M=D\n")
-
-	// set argument[4] 300
-	sb.WriteString(
-		"@ARG\n" +
-			"D=M\n" +
-			"@4\n" +
-			"D=D+A\n" +
-			"@300\n" +
-			"M=D\n")
-
-	// set argument[5] 3010
-	sb.WriteString(
-		"@ARG\n" +
-			"D=M\n" +
-			"@5\n" +
-			"D=D+A\n" +
-			"@3010\n" +
-			"M=D\n")
-
-	// set argument[6] 4010
-	sb.WriteString(
-		"@ARG\n" +
-			"D=M\n" +
-			"@6\n" +
-			"D=D+A\n" +
-			"@4010\n" +
-			"M=D\n")
+	sb.WriteString("@261\n" +
+		"D=A\n" +
+		"@SP\n" +
+		"M=D\n" +
+		"@Sys.init\n" +
+		"0;JMP\n")
 
 	return sb.String()
 }
@@ -282,7 +245,10 @@ func (t *Translator) initSegment() string {
 func (t *Translator) WriteInit() string {
 	var sb strings.Builder
 
-	sb.WriteString(t.initSegment())
+	if ShouldCallSysInit {
+		sb.WriteString(t.initSegment())
+	}
+
 	return sb.String()
 }
 
@@ -478,9 +444,9 @@ func (t *Translator) WriteReturn() string {
 func (t *Translator) WriteCall(functionName string, nVars int) string {
 	var sb strings.Builder
 	counter := labelCount[functionName]
-	returnAddr := fmt.Sprintf("RETURN_ADDR_@%s_%d\n", functionName, counter)
+	returnAddr := fmt.Sprintf("RETURN_ADDR_%s_%d", functionName, counter)
 	labelCount[functionName]++
-	sb.WriteString(returnAddr + "D=A\n" + "@SP\n" + "A=M\n" + "M=D\n" + "@SP\n" + "M=M+1\n")
+	sb.WriteString("@" + returnAddr + "\n" + "D=A\n" + "@SP\n" + "A=M\n" + "M=D\n" + "@SP\n" + "M=M+1\n")
 	sb.WriteString("@LCL\n" + "D=M\n" + "@SP\n" + "A=M\n" + "M=D\n" + "@SP\n" + "M=M+1\n")
 	sb.WriteString("@ARG\n" + "D=M\n" + "@SP\n" + "A=M\n" + "M=D\n" + "@SP\n" + "M=M+1\n")
 	sb.WriteString("@THIS\n" + "D=M\n" + "@SP\n" + "A=M\n" + "M=D\n" + "@SP\n" + "M=M+1\n")
@@ -590,6 +556,8 @@ func (p *Parser) advance() {
 		p.mCmdType = CFUNCTION
 	case "return":
 		p.mCmdType = CRETURN
+	case "call":
+		p.mCmdType = CCALL
 	default:
 		p.mCmdType = CARITHMETIC
 	}
