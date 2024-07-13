@@ -1,0 +1,10 @@
+class Main {
+    function void main() {
+        var FloatSquare game;
+        do Random.setSeed(12894);
+        let game = FloatSquare.new();
+        do game.run();
+        do game.dispose();
+        return;
+    }
+}

@@ -1,0 +1,33 @@
+
+class FloatSquare{
+   field Square square;
+
+   constructor FloatSquare new() {
+      let square = Square.new(256, 128, 10, 3);
+      return this;
+   }
+
+   method void dispose() {
+      do square.dispose();
+      do Memory.deAlloc(this);
+      return;
+   }
+
+   method void floatSquare() {
+      do square.move();
+      do Sys.wait(50);
+      return;
+   }
+
+   method void run() {
+      var char key; 
+      var boolean exit;
+      let exit = false;
+
+      while (~exit) {
+         let key = Keyboard.keyPressed();
+         do floatSquare();
+      }
+      return;
+   }
+}

@@ -1,0 +1,207 @@
+function Square.new 0
+    push constant 6
+    call Memory.alloc 1
+    pop pointer 0
+    push argument 0
+    pop this 0
+    push argument 1
+    pop this 1
+    push argument 2
+    pop this 2
+    push constant 1
+    push constant 3
+    call Random.randRange 2
+    pop this 3
+    push constant 1
+    push constant 3
+    call Random.randRange 2
+    pop this 4
+    push this 3
+    push constant 0
+    eq
+    not
+    if-goto L1
+    push constant 1
+    pop this 3
+    goto L0
+label L1
+label L0
+    push this 4
+    push constant 0
+    eq
+    not
+    if-goto L3
+    push constant 1
+    pop this 4
+    goto L2
+label L3
+label L2
+    push pointer 0
+    call Square.draw 1
+    pop temp 0
+    push pointer 0
+    return
+function Square.draw 0
+    push argument 0
+    pop pointer 0
+    push constant 1
+    neg
+    call Screen.setColor 1
+    pop temp 0
+    push this 0
+    push this 1
+    push this 0
+    push this 2
+    add
+    push this 1
+    push this 2
+    add
+    call Screen.drawRectangle 4
+    pop temp 0
+    push constant 0
+    return
+function Square.move 0
+    push argument 0
+    pop pointer 0
+    push pointer 0
+    call Square.erase 1
+    pop temp 0
+    push this 0
+    push this 3
+    add
+    pop this 0
+    push this 1
+    push this 4
+    add
+    pop this 1
+    push this 0
+    push this 2
+    sub
+    push constant 0
+    lt
+    not
+    if-goto L5
+    push this 3
+    neg
+    push constant 1
+    push constant 3
+    call Random.randRange 2
+    add
+    pop this 3
+    push this 2
+    pop this 0
+    goto L4
+label L5
+label L4
+    push this 0
+    push this 2
+    add
+    push constant 511
+    gt
+    not
+    if-goto L7
+    push this 3
+    neg
+    push constant 1
+    push constant 3
+    call Random.randRange 2
+    add
+    pop this 3
+    push constant 511
+    push this 2
+    sub
+    pop this 0
+    goto L6
+label L7
+label L6
+    push this 1
+    push this 2
+    sub
+    push constant 0
+    lt
+    not
+    if-goto L9
+    push this 4
+    neg
+    push constant 1
+    push constant 3
+    call Random.randRange 2
+    add
+    pop this 4
+    push this 2
+    pop this 1
+    goto L8
+label L9
+label L8
+    push this 1
+    push this 2
+    add
+    push constant 255
+    gt
+    not
+    if-goto L11
+    push this 4
+    neg
+    push constant 1
+    push constant 3
+    call Random.randRange 2
+    add
+    pop this 4
+    push constant 255
+    push this 2
+    sub
+    pop this 1
+    goto L10
+label L11
+label L10
+    push this 3
+    push constant 0
+    eq
+    not
+    if-goto L13
+    push constant 1
+    pop this 3
+    goto L12
+label L13
+label L12
+    push this 4
+    push constant 0
+    eq
+    not
+    if-goto L15
+    push constant 1
+    pop this 4
+    goto L14
+label L15
+label L14
+    push pointer 0
+    call Square.draw 1
+    pop temp 0
+    push constant 0
+    return
+function Square.erase 0
+    push argument 0
+    pop pointer 0
+    push constant 0
+    call Screen.setColor 1
+    pop temp 0
+    push this 0
+    push this 1
+    push this 0
+    push this 2
+    add
+    push this 1
+    push this 2
+    add
+    call Screen.drawRectangle 4
+    pop temp 0
+    push constant 0
+    return
+function Square.dispose 0
+    push argument 0
+    pop pointer 0
+    push pointer 0
+    call Memory.deAlloc 1
+    pop temp 0
+    push constant 0
+    return

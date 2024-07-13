@@ -1,0 +1,55 @@
+
+class Square {
+
+   field int x, y;  
+   field int length;
+   field int dx, dy;
+   field Random random;
+
+   constructor Square new(int ax, int ay, int alength, int seed) {
+      let x = ax;
+      let y = ay;
+      let length = alength;
+      let dx = Random.randRange(1,3);
+      let dy = Random.randRange(1,3);
+      if (dx = 0) { let dx = 1; }
+      if (dy = 0) { let dy = 1; }
+      do draw();
+      return this;
+   }
+
+   method void draw() {
+      do Screen.setColor(true);
+      do Screen.drawRectangle(x, y, x+length, y+length);
+      return;
+   }
+
+   method void move() {
+      do erase();
+      let x = x + dx;
+      let y = y + dy;
+
+      if (x - length < 0) { let dx = -dx + (Random.randRange(1,3)); let x = length; }
+      if (x + length > 511) { let dx = -dx + (Random.randRange(1,3)); let x = 511 - length; }
+      if (y - length < 0) { let dy = -dy + (Random.randRange(1,3)); let y = length; }
+      if (y + length > 255) { let dy = -dy + (Random.randRange(1,3)); let y = 255 - length; }
+
+      if (dx = 0) { let dx = 1; }
+      if (dy = 0) { let dy = 1; }
+
+      do draw();
+      return;
+   }
+
+   method void erase() {
+      do Screen.setColor(false);
+      do Screen.drawRectangle(x, y, x+length, y+length);
+      return;
+   }
+
+   method void dispose() {
+      do Memory.deAlloc(this);
+      return;
+   }
+
+}

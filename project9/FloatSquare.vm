@@ -1,0 +1,53 @@
+function FloatSquare.new 0
+    push constant 1
+    call Memory.alloc 1
+    pop pointer 0
+    push constant 256
+    push constant 128
+    push constant 10
+    push constant 3
+    call Square.new 4
+    pop this 0
+    push pointer 0
+    return
+function FloatSquare.dispose 0
+    push argument 0
+    pop pointer 0
+    push this 0
+    call Square.dispose 1
+    pop temp 0
+    push pointer 0
+    call Memory.deAlloc 1
+    pop temp 0
+    push constant 0
+    return
+function FloatSquare.floatSquare 0
+    push argument 0
+    pop pointer 0
+    push this 0
+    call Square.move 1
+    pop temp 0
+    push constant 50
+    call Sys.wait 1
+    pop temp 0
+    push constant 0
+    return
+function FloatSquare.run 2
+    push argument 0
+    pop pointer 0
+    push constant 0
+    pop local 1
+label L0
+    push local 1
+    not
+    not
+    if-goto L1
+    call Keyboard.keyPressed 0
+    pop local 0
+    push pointer 0
+    call FloatSquare.floatSquare 1
+    pop temp 0
+    goto L0
+label L1
+    push constant 0
+    return
