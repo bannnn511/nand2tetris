@@ -32,7 +32,7 @@ func main() {
 
 	outFile := ""
 	if fileInfo.IsDir() {
-		// is a file
+		// is a directory
 		vmFiles = getVmFiles(os.Args[1])
 		outFile = fmt.Sprintf("%v/%v.asm", os.Args[1], fileInfo.Name())
 		defer func(fss []os.File) {
@@ -43,7 +43,7 @@ func main() {
 			}
 		}(vmFiles)
 	} else {
-		// is a directory
+		// is a file
 		if err != nil {
 			printErr(err.Error())
 		}
