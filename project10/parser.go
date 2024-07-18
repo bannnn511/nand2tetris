@@ -15,7 +15,8 @@ func (p *Parser) init(filename string, src []byte) {
 
 func (p *Parser) parseFile() {
 	for p.tok != EOF {
-
+		tok, _ := p.scanner.Scan()
+		p.tok = tok
 	}
 }
 

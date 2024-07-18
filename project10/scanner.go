@@ -41,16 +41,18 @@ func (s *Scanner) Scan() (tok Token, lit string) {
 		tok, lit = s.scanNumber()
 	default:
 		s.next()
-		lit = string(ch)
-		if IsSymbol(lit) {
-			tok = SYMBOL
-		}
-		if ch == '"' {
+		switch ch {
+		case '"':
 			tok = CHAR
 			lit = s.scanString()
-		}
-		if ch == eof {
+		case eof:
 			tok = EOF
+		case '/':
+			tok = COMMENT
+			lit = s.scanComment()
+		default:
+			lit = string(ch)
+			tok = SYMBOL
 		}
 	}
 
@@ -129,6 +131,18 @@ func (s *Scanner) scanString() string {
 	}
 
 	return string(s.src[offs:s.offset])
+}
+
+func (s *Scanner) scanComment() string {
+	offs := s.offset - 1
+	if s.ch == '/' {
+		s.next()
+		for s.ch != '\n' && s.ch > 0 {
+			s.next()
+		}
+	}
+
+	return string(s.src[offs:s.rdOffset])
 }
 
 func (s *Scanner) skipWhiteSpace() {

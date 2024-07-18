@@ -192,6 +192,16 @@ func TestScanner_Scan(t *testing.T) {
 				},
 			},
 		},
+		{
+			name: "8. test comment",
+			src:  []byte("// aaa"),
+			wants: []lexical{
+				{
+					tok: pkg.COMMENT,
+					lit: "// aaa",
+				},
+			},
+		},
 	}
 
 	for _, tt := range tests {
