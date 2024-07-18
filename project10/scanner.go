@@ -29,17 +29,32 @@ func (s *Scanner) Init(src []byte) {
 func (s *Scanner) Scan() (tok Token, lit string) {
 	s.skipWhiteSpace()
 
+	if s.isEOF() {
+		return EOF, ""
+	}
+
 	switch ch := s.ch; {
 	case isLetter(ch):
 		lit = s.scanIdentifier()
 		tok = Lookup(lit)
+	case isDecimal(ch):
+		tok, lit = s.scanNumber()
+	default:
+		s.next()
+		lit = string(ch)
+		if IsSymbol(lit) {
+			tok = SYMBOL
+		}
+		if ch == eof {
+			tok = EOF
+		}
 	}
 
 	return
 }
 
 func (s *Scanner) next() {
-	if s.rdOffset > len(s.src) {
+	if s.rdOffset >= len(s.src) {
 		s.ch = eof
 		return
 	}
@@ -81,10 +96,32 @@ func (s *Scanner) scanIdentifier() string {
 	return string(s.src[offs:s.offset])
 }
 
+func (s *Scanner) scanNumber() (tok Token, lit string) {
+	offs := s.offset
+	tok = INT
+	for rdOffset, b := range s.src[s.rdOffset:] {
+		if '0' <= b && b <= '9' {
+			continue
+		}
+		s.rdOffset += rdOffset
+		s.offset = s.rdOffset
+		s.ch = rune(b)
+		s.rdOffset++
+		break
+	}
+	lit = string(s.src[offs:s.offset])
+
+	return
+}
+
 func (s *Scanner) skipWhiteSpace() {
 	for s.ch == ' ' || s.ch == '\t' || s.ch == '\n' || s.ch == '\r' {
 		s.next()
 	}
+}
+
+func (s *Scanner) isEOF() bool {
+	return s.ch == eof
 }
 
 func isLetter(ch rune) bool {
@@ -92,5 +129,5 @@ func isLetter(ch rune) bool {
 
 }
 
-func lower(ch rune) rune { return ('a' - 'A') | ch } // returns lower-case ch iff ch is ASCII letter
-// func isDecimal(ch rune) bool { return '0' <= ch && ch <= '9' }
+func lower(ch rune) rune     { return ('a' - 'A') | ch } // returns lower-case ch iff ch is ASCII letter
+func isDecimal(ch rune) bool { return '0' <= ch && ch <= '9' }

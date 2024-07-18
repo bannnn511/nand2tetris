@@ -49,9 +49,8 @@ const (
 	RPAREN // )
 	RBRACK // ]
 	COMMA  // ,
-	symbol_end
+	PERIOD // ;
 
-	operator_beg
 	ADD // +
 	SUB // -
 	QUO // /
@@ -61,7 +60,7 @@ const (
 	LSS // <
 	EQL // =
 	NOT // ~
-	operator_end
+	symbol_end
 )
 
 var tokens = [...]string{
@@ -93,24 +92,26 @@ var tokens = [...]string{
 	WHILE:       "while",
 	RETURN:      "return",
 
-	LBRACE: "LBRACE",
-	LPAREN: "LPAREN",
-	LBRACK: "LBRACK",
+	SYMBOL: "symbol",
+	LBRACE: "{",
+	LPAREN: "(",
+	LBRACK: "[",
 
-	RBRACE: "RBRACE",
-	RPAREN: "RPAREN",
-	RBRACK: "RBRACK",
-	COMMA:  "COMMA",
+	RBRACE: "}",
+	RPAREN: ")",
+	RBRACK: "]",
+	COMMA:  ",",
+	PERIOD: ";",
 
-	ADD: "ADD",
-	SUB: "SUB",
-	QUO: "QUO",
-	AND: "AND",
-	OR:  "OR",
-	GTR: "GTR",
-	LSS: "LSS",
-	EQL: "EQL",
-	NOT: "NOT",
+	ADD: "+",
+	SUB: "-",
+	QUO: "/",
+	AND: "&",
+	OR:  "|",
+	GTR: ">",
+	LSS: "<",
+	EQL: "=",
+	NOT: "~",
 }
 
 func (tok Token) String() string {
@@ -126,11 +127,17 @@ func (tok Token) String() string {
 }
 
 var keywords map[string]Token
+var symbols map[string]Token
 
 func init() {
 	keywords = make(map[string]Token, keyword_end-(keyword_beg+1))
 	for i := keyword_beg + 1; i < keyword_end; i++ {
 		keywords[tokens[i]] = i
+	}
+
+	symbols = make(map[string]Token, symbol_end-(symbol_beg+1))
+	for i := symbol_beg + 1; i < symbol_end; i++ {
+		symbols[tokens[i]] = i
 	}
 }
 
@@ -140,4 +147,9 @@ func Lookup(ident string) Token {
 	}
 
 	return IDENT
+}
+
+func IsSymbol(v string) bool {
+	_, ok := symbols[v]
+	return ok
 }
