@@ -136,6 +136,62 @@ func TestScanner_Scan(t *testing.T) {
 				},
 			},
 		},
+		{
+			name: "6. if (x<0) {",
+			src:  []byte("if (x<0) {"),
+			wants: []lexical{
+				{
+					tok: pkg.KEYWORD,
+					lit: "if",
+				},
+				{
+					tok: pkg.SYMBOL,
+					lit: "(",
+				},
+				{
+					tok: pkg.IDENT,
+					lit: "x",
+				},
+				{
+					tok: pkg.SYMBOL,
+					lit: "<",
+				},
+				{
+					tok: pkg.INT,
+					lit: "0",
+				},
+				{
+					tok: pkg.SYMBOL,
+					lit: ")",
+				},
+				{
+					tok: pkg.SYMBOL,
+					lit: "{",
+				},
+			},
+		},
+		{
+			name: "7. let state = \"negative\"",
+			src:  []byte(`let state = "negative"`),
+			wants: []lexical{
+				{
+					tok: pkg.KEYWORD,
+					lit: "let",
+				},
+				{
+					tok: pkg.IDENT,
+					lit: "state",
+				},
+				{
+					tok: pkg.SYMBOL,
+					lit: "=",
+				},
+				{
+					tok: pkg.CHAR,
+					lit: "negative",
+				},
+			},
+		},
 	}
 
 	for _, tt := range tests {
@@ -153,7 +209,7 @@ func TestScanner_Scan(t *testing.T) {
 					want,
 					got,
 					"got %v, want %v",
-					tok,
+					got,
 					want,
 				)
 

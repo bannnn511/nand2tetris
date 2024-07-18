@@ -45,6 +45,10 @@ func (s *Scanner) Scan() (tok Token, lit string) {
 		if IsSymbol(lit) {
 			tok = SYMBOL
 		}
+		if ch == '"' {
+			tok = CHAR
+			lit = s.scanString()
+		}
 		if ch == eof {
 			tok = EOF
 		}
@@ -112,6 +116,19 @@ func (s *Scanner) scanNumber() (tok Token, lit string) {
 	lit = string(s.src[offs:s.offset])
 
 	return
+}
+
+func (s *Scanner) scanString() string {
+	offs := s.offset
+	for {
+		ch := s.ch
+		s.next()
+		if ch == '"' {
+			break
+		}
+	}
+
+	return string(s.src[offs:s.offset])
 }
 
 func (s *Scanner) skipWhiteSpace() {
