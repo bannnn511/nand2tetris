@@ -47,17 +47,17 @@ func (p *Parser) printTree() {
 	}
 }
 
+func (p *Parser) next() {
+	tok, lit := p.scanner.Scan()
+	p.tok = tok
+	p.elements = append(p.elements, Ast{tok, lit})
+}
+
 func (p *Parser) expect(tok Token) {
 	if p.tok != tok {
 		p.errorExpected("'" + tok.String() + "'")
 	}
 	p.next()
-}
-
-func (p *Parser) next() {
-	tok, lit := p.scanner.Scan()
-	p.tok = tok
-	p.elements = append(p.elements, Ast{tok, lit})
 }
 
 func (p *Parser) errorExpected(msg string) {
