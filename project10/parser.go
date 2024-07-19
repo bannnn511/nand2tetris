@@ -1,6 +1,9 @@
 package main
 
-import "fmt"
+import (
+	"fmt"
+	"strings"
+)
 
 type Ast struct {
 	tok Token
@@ -12,6 +15,7 @@ type Parser struct {
 	tok      Token // current token
 	fileName string
 	scanner  Scanner
+	out      string
 }
 
 func (p *Parser) init(filename string, src []byte) {
@@ -30,6 +34,25 @@ func (p *Parser) parseFile() {
 
 func (p *Parser) append(ele Ast) {
 	p.elements = append(p.elements, ele)
+}
+
+func (p *Parser) GetXML() string {
+	var sb strings.Builder
+	for _, node := range p.elements {
+		switch node.tok {
+		case START:
+			sb.WriteString("<tokens>\n")
+		case EOF:
+			sb.WriteString("</tokens>")
+		case COMMENT:
+			continue
+		default:
+			v := fmt.Sprintf("<%v> %v </%v>\n", node.tok, node.lit, node.tok)
+			sb.WriteString(v)
+		}
+	}
+
+	return sb.String()
 }
 
 func (p *Parser) printTree() {

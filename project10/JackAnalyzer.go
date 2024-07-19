@@ -7,8 +7,8 @@ import (
 )
 
 func main() {
-	os.Args = []string{"", "test/ExpressionLessSquare/Main.jack"}
-	os.Args[1] = "test/ExpressionLessSquare/Main.jack"
+	// os.Args = []string{"", "test/ExpressionLessSquare/Main.jack"}
+	// os.Args[1] = "test/ExpressionLessSquare/Main.jack"
 	if len(os.Args) < 2 {
 		printErr("invalid number of arguments")
 	}
@@ -48,6 +48,12 @@ func main() {
 		parser.init(jack.Name(), src)
 		parser.parseFile()
 		parser.printTree()
+
+		fileXML := parser.GetXML()
+		writeErr := os.WriteFile(jack.Name()+".xml", []byte(fileXML), 0644)
+		if writeErr != nil {
+			printErr(err.Error())
+		}
 	}
 
 }
