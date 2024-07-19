@@ -7,6 +7,8 @@ import (
 )
 
 func main() {
+	os.Args = []string{"", "test/ExpressionLessSquare/Main.jack"}
+	os.Args[1] = "test/ExpressionLessSquare/Main.jack"
 	if len(os.Args) < 2 {
 		printErr("invalid number of arguments")
 	}
@@ -37,9 +39,15 @@ func main() {
 		}
 	}(jackFiles)
 
+	var parser Parser
 	for _, jack := range jackFiles {
-		// parser.ParseFile
-		print(jack)
+		src, err := os.ReadFile(jack.Name())
+		if err != nil {
+			printErr(err.Error())
+		}
+		parser.init(jack.Name(), src)
+		parser.parseFile()
+		parser.printTree()
 	}
 
 }
@@ -58,12 +66,11 @@ func getJackFiles(dir string) []*os.File {
 
 	for _, file := range files {
 		if strings.HasSuffix(file.Name(), ".jack") {
-
-			file, err := os.OpenFile(dir+"/"+file.Name(), os.O_RDONLY, 0)
+			f, err := os.OpenFile(dir+"/"+file.Name(), os.O_RDONLY, 0)
 			if err != nil {
 				printErr(err.Error())
 			}
-			jackFiles = append(jackFiles, file)
+			jackFiles = append(jackFiles, f)
 		}
 	}
 

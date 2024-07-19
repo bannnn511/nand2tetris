@@ -61,6 +61,8 @@ const (
 	EQL // =
 	NOT // ~
 	symbol_end
+
+	START // only for printting first line of xml
 )
 
 var tokens = [...]string{

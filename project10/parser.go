@@ -1,22 +1,49 @@
 package main
 
+import "fmt"
+
+type Ast struct {
+	tok Token
+	lit string
+}
+
 type Parser struct {
+	elements []Ast // list of lexical elements
+	tok      Token // current token
 	fileName string
-	tok      Token
 	scanner  Scanner
 }
 
 func (p *Parser) init(filename string, src []byte) {
 	p.scanner.Init(src)
 	p.fileName = filename
-
-	p.next()
+	p.tok = START
+	p.elements = make([]Ast, 0, len(src))
+	p.append(Ast{START, ""})
 }
 
 func (p *Parser) parseFile() {
 	for p.tok != EOF {
-		tok, _ := p.scanner.Scan()
-		p.tok = tok
+		p.next()
+	}
+}
+
+func (p *Parser) append(ele Ast) {
+	p.elements = append(p.elements, ele)
+}
+
+func (p *Parser) printTree() {
+	for _, node := range p.elements {
+		switch node.tok {
+		case START:
+			fmt.Println("<tokens>")
+		case EOF:
+			fmt.Println("</tokens>")
+		case COMMENT:
+			continue
+		default:
+			fmt.Printf("<%v> %v </%v>\n", node.tok, node.lit, node.tok)
+		}
 	}
 }
 
@@ -27,14 +54,10 @@ func (p *Parser) expect(tok Token) {
 	p.next()
 }
 
-func (p *Parser) next0() {
-	for {
-
-	}
-}
-
 func (p *Parser) next() {
-	p.next0()
+	tok, lit := p.scanner.Scan()
+	p.tok = tok
+	p.elements = append(p.elements, Ast{tok, lit})
 }
 
 func (p *Parser) errorExpected(msg string) {

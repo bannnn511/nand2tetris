@@ -19,7 +19,6 @@ const eof = -1
 
 func (s *Scanner) Init(src []byte) {
 	s.src = src
-	s.ch = ' '
 	s.offset = 0
 	s.rdOffset = 0
 
@@ -72,9 +71,9 @@ func (s *Scanner) next() {
 	}
 
 	s.offset = s.rdOffset
-	if s.ch == '\n' {
-		panic("handle new line")
-	}
+	// if s.ch == '\n' {
+	//	return
+	// }
 
 	r, w := rune(s.src[s.rdOffset]), 1
 	switch {
@@ -153,8 +152,13 @@ func (s *Scanner) scanComment() string {
 	//**-style comment
 	s.next()
 	s.next()
-	for s.ch != '/' && s.ch > 0 {
+	for s.ch > 0 {
+		ch := s.ch
 		s.next()
+		if ch == '*' && s.ch == '/' {
+			s.next()
+			goto exit
+		}
 	}
 
 exit:
@@ -177,7 +181,6 @@ func isLetter(ch rune) bool {
 	return 'a' <= lower(ch) && lower(ch) <= 'z' ||
 		ch == '_' ||
 		ch >= utf8.RuneSelf && unicode.IsLetter(ch)
-
 }
 
 func lower(ch rune) rune     { return ('a' - 'A') | ch } // returns lower-case ch iff ch is ASCII letter
