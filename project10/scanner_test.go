@@ -193,12 +193,22 @@ func TestScanner_Scan(t *testing.T) {
 			},
 		},
 		{
-			name: "8. test comment",
+			name: "8. test comment //",
 			src:  []byte("// aaa"),
 			wants: []lexical{
 				{
 					tok: pkg.COMMENT,
 					lit: "// aaa",
+				},
+			},
+		},
+		{
+			name: "9. test comment /** comment */",
+			src:  []byte("/** aaa */"),
+			wants: []lexical{
+				{
+					tok: pkg.COMMENT,
+					lit: "/** aaa */",
 				},
 			},
 		},
@@ -225,15 +235,17 @@ func TestScanner_Scan(t *testing.T) {
 
 			}
 
-			tok, lit := scanner.Scan()
-			assert.Equal(
-				t,
-				pkg.EOF,
-				tok,
-				"expexted EOF, got %v and %v",
-				tok,
-				lit,
-			)
+			t.Run("test EOF", func(t *testing.T) {
+				tok, lit := scanner.Scan()
+				assert.Equal(
+					t,
+					pkg.EOF,
+					tok,
+					"expexted EOF, got %v and %v",
+					tok,
+					lit,
+				)
+			})
 		})
 	}
 }

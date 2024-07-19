@@ -48,8 +48,14 @@ func (s *Scanner) Scan() (tok Token, lit string) {
 		case eof:
 			tok = EOF
 		case '/':
-			tok = COMMENT
-			lit = s.scanComment()
+			if s.ch == '/' || s.ch == '*' {
+				// comment
+				tok = COMMENT
+				lit = s.scanComment()
+			} else {
+				// division
+				panic("implement division case")
+			}
 		default:
 			lit = string(ch)
 			tok = SYMBOL
@@ -135,14 +141,26 @@ func (s *Scanner) scanString() string {
 
 func (s *Scanner) scanComment() string {
 	offs := s.offset - 1
+	//-style comment
 	if s.ch == '/' {
 		s.next()
 		for s.ch != '\n' && s.ch > 0 {
 			s.next()
 		}
+		goto exit
 	}
 
-	return string(s.src[offs:s.rdOffset])
+	//**-style comment
+	s.next()
+	s.next()
+	for s.ch != '/' && s.ch > 0 {
+		s.next()
+	}
+
+exit:
+	lit := string(s.src[offs:s.rdOffset])
+	s.next()
+	return lit
 }
 
 func (s *Scanner) skipWhiteSpace() {
@@ -156,7 +174,9 @@ func (s *Scanner) isEOF() bool {
 }
 
 func isLetter(ch rune) bool {
-	return 'a' <= lower(ch) && lower(ch) <= 'z' || ch == '_' || ch >= utf8.RuneSelf && unicode.IsLetter(ch)
+	return 'a' <= lower(ch) && lower(ch) <= 'z' ||
+		ch == '_' ||
+		ch >= utf8.RuneSelf && unicode.IsLetter(ch)
 
 }
 
