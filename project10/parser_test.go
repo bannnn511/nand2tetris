@@ -6,7 +6,7 @@ import (
 	"testing"
 )
 
-func TestParser_compileWhile(t *testing.T) {
+func TestParser_ParseFile(t *testing.T) {
 
 	tests := []struct {
 		name string
@@ -15,13 +15,20 @@ func TestParser_compileWhile(t *testing.T) {
 		{
 			"1. test main class",
 			[]byte(`
-			class Main {
-				static boolean test;
+class Square {
 
-				function void main() {
-     				var SquareGame game;
-        			let game = game;
-    		}`),
+   field int x, y; // screen location of the square's top-left corner
+   field int size; // length of this square, in pixels
+
+   /** Constructs a new square with a given location and size. */
+   constructor Square new(int Ax, int Ay, int Asize) {
+      let x = Ax;
+      let y = Ay;
+      let size = Asize;
+      do draw();
+      return this;
+   }
+		`),
 		},
 	}
 

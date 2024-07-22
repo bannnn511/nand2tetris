@@ -5,7 +5,7 @@ import (
 	"strings"
 )
 
-const debug = true
+const debug = false
 
 type Ast struct {
 	tok Token
@@ -48,7 +48,7 @@ func (p *Parser) ParseFile() {
 	for p.lit == "constructor" ||
 		p.lit == "function" ||
 		p.lit == "method" {
-
+		p.compileSubroutine()
 	}
 
 	p.writeTemplate()
@@ -61,15 +61,97 @@ func (p *Parser) write(str string) {
 }
 
 func (p *Parser) compileSubroutine() {
-	p.writeIndentation()
-	p.write("<subroutineDec>\n")
+	p.writeWithIndentation("<subroutineDec>\n")
+	p.indentation++
+	p.writeTemplate() // kw
 
-	p.write("</subroutineDec>\n")
+	p.next()
+	p.writeTemplate()
+
+	p.next()
+	p.writeTemplate() // identifier
+
+	p.next()
+	p.writeTemplate() // (
+	p.next()
+	p.compileParameterList() // parameter
+	p.writeTemplate()        // )
+	p.next()
+
+	p.writeWithIndentation("<subroutineBody>\n")
+	p.indentation++
+	p.writeTemplate()
+
+	p.next()
+	for p.lit == "var" {
+		p.compileVarDec()
+	}
+	panic("write statement")
+
+	p.writeTemplate() // symbol
+	p.indentation--
+	p.writeWithIndentation("</subroutineBody>\n")
+	p.indentation--
+	p.writeWithIndentation("</subroutineDec>\n")
+}
+
+func (p *Parser) compileStatements() {
+
+}
+
+func (p *Parser) compileVarDec() {
+	p.writeWithIndentation("<varDec>\n")
+	p.indentation++
+
+	p.writeTemplate()
+	p.next()
+
+	p.indentation--
+	p.writeWithIndentation("</varDec>\n")
+}
+
+func (p *Parser) compileTypeAndVarName() {
+	p.writeTemplate()
+	p.next()
+
+	p.writeTemplate()
+	p.next()
+
+	for p.lit == "," {
+		p.writeTemplate() // symbol
+		p.next()
+
+		p.writeTemplate() // identifier
+		p.next()
+	}
+
+	p.writeTemplate()
+	p.next()
+}
+
+func (p *Parser) compileParameterList() {
+	p.writeWithIndentation("<parameterList>\n")
+	p.indentation++
+
+	for p.tok != SYMBOL {
+		p.writeTemplate()
+		p.next()
+
+		p.writeTemplate()
+		p.next()
+
+		if p.lit == "," {
+			p.writeTemplate()
+			p.next()
+		}
+	}
+
+	p.indentation--
+	p.writeWithIndentation("</parameterList>\n")
 }
 
 func (p *Parser) compileClassVarDec() {
-	p.writeIndentation()
-	p.write("<classVarDec>\n")
+	p.writeWithIndentation("<classVarDec>\n")
 	p.indentation++
 	p.writeTemplate()
 	p.next()
@@ -77,22 +159,7 @@ func (p *Parser) compileClassVarDec() {
 	p.compileTypeAndVarName()
 
 	p.indentation--
-	p.write("</classVarDec>\n")
-}
-
-func (p *Parser) compileTypeAndVarName() {
-	p.writeTemplate()
-	p.next()
-	p.writeTemplate()
-	p.next()
-	for p.lit == "," {
-		p.writeTemplate()
-		p.next()
-		p.writeTemplate()
-		p.next()
-	}
-	p.writeTemplate()
-	p.next()
+	p.writeWithIndentation("</classVarDec>\n")
 }
 
 func (p *Parser) compileWhile() {
@@ -147,6 +214,10 @@ func (p *Parser) printTree() {
 
 func (p *Parser) next() {
 	tok, lit := p.scanner.Scan()
+	if tok == COMMENT {
+		p.next()
+		return
+	}
 	p.tok = tok
 	p.lit = lit
 	if debug {
@@ -171,6 +242,11 @@ func (p *Parser) errorExpected(msg string) {
 }
 
 const template = "<%v> %v </%v>\n"
+
+func (p *Parser) writeWithIndentation(str string) {
+	p.writeIndentation()
+	p.write(str)
+}
 
 func (p *Parser) writeIndentation() {
 	for i := 0; i < p.indentation; i++ {
