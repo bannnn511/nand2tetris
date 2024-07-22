@@ -53,7 +53,7 @@ func (s *Scanner) Scan() (tok Token, lit string) {
 				lit = s.scanComment()
 			} else {
 				// division
-				panic("implement division case")
+				tok = QUO
 			}
 		default:
 			lit = string(ch)

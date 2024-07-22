@@ -39,8 +39,8 @@ func main() {
 		if err != nil {
 			printErr(err.Error())
 		}
-		parser.init(jack, src)
-		parser.parseFile()
+		parser.Init(jack, src)
+		parser.ParseFile()
 		parser.printTree()
 
 		fileXML := parser.GetXML()
