@@ -50,7 +50,9 @@ const (
 	RBRACK // ]
 	COMMA  // ,
 	PERIOD // ;
+	symbol_end
 
+	op_beg
 	ADD // +
 	SUB // -
 	QUO // /
@@ -60,7 +62,7 @@ const (
 	LSS // <
 	EQL // =
 	NOT // ~
-	symbol_end
+	op_end
 
 	START // only for printting first line of xml
 )
@@ -130,6 +132,7 @@ func (tok Token) String() string {
 
 var keywords map[string]Token
 var symbols map[string]Token
+var ops map[string]Token
 
 func init() {
 	keywords = make(map[string]Token, keyword_end-(keyword_beg+1))
@@ -140,6 +143,11 @@ func init() {
 	symbols = make(map[string]Token, symbol_end-(symbol_beg+1))
 	for i := symbol_beg + 1; i < symbol_end; i++ {
 		symbols[tokens[i]] = i
+	}
+
+	ops = make(map[string]Token, op_end-(op_beg+1))
+	for i := symbol_beg + 1; i < symbol_end; i++ {
+		ops[tokens[i]] = i
 	}
 }
 
@@ -153,5 +161,10 @@ func Lookup(ident string) Token {
 
 func IsSymbol(v string) bool {
 	_, ok := symbols[v]
+	return ok
+}
+
+func IsOp(v string) bool {
+	_, ok := ops[v]
 	return ok
 }

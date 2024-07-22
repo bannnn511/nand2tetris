@@ -86,7 +86,8 @@ func (p *Parser) compileSubroutine() {
 	for p.lit == "var" {
 		p.compileVarDec()
 	}
-	panic("write statement")
+
+	p.compileStatements()
 
 	p.writeTemplate() // symbol
 	p.indentation--
@@ -96,7 +97,157 @@ func (p *Parser) compileSubroutine() {
 }
 
 func (p *Parser) compileStatements() {
+	p.writeWithIndentation("<statements>\n")
+	p.indentation++
 
+	for p.tok == KEYWORD {
+		switch p.lit {
+		case "let":
+			p.compileLet()
+		case "while":
+			p.compileWhile()
+		case "if":
+		case "do":
+		case "return":
+		}
+	}
+
+	p.indentation--
+	p.writeWithIndentation("</statements>\n")
+}
+
+// 'let' varName ('[' expression ']')? '=' expression ';'
+func (p *Parser) compileLet() {
+	p.writeWithIndentation("<letStatement>\n")
+	p.indentation++
+
+	p.writeTemplate() // let
+
+	p.next()
+	p.writeTemplate() // varName
+
+	p.next()
+	if p.lit == "[" {
+		p.writeTemplate() // [
+		p.next()
+		p.compileExpressions()
+		p.writeTemplate() // ]
+		p.next()
+	}
+
+	p.writeTemplate() // =
+	p.next()
+
+	p.compileExpressions()
+	p.writeTemplate() // ;
+
+	p.indentation--
+	p.writeWithIndentation("</letStatement>\n")
+	p.next()
+}
+
+// 'while' '(' expression ')' '{' statements '}'
+func (p *Parser) compileWhile() {
+	p.writeWithIndentation("<whileStatement>\n")
+	p.indentation++
+
+	p.next()
+	p.writeTemplate() // (
+
+	p.next()
+	p.compileExpressions()
+
+	p.next()
+	p.writeTemplate() // )
+
+	p.next()
+	p.writeTemplate() // {
+
+	p.next()
+	p.compileStatements()
+
+	p.next()
+	p.writeTemplate() // }
+
+	p.indentation--
+	p.writeWithIndentation("</whileStatement>\n")
+	p.next()
+}
+
+func (p *Parser) compileExpressions() {
+	p.writeWithIndentation("<expression>\n")
+	p.indentation++
+
+	p.CompileTerm()
+	for p.tok == SYMBOL && IsOp(p.lit) {
+		p.writeTemplate()
+		p.next()
+		p.CompileTerm()
+	}
+
+	p.indentation--
+	p.writeWithIndentation("</expression>\n")
+}
+
+func (p *Parser) CompileTerm() {
+	p.writeWithIndentation("<term>\n")
+	p.indentation++
+
+	if p.tok == KEYWORD {
+		p.writeTemplate()
+	} else if p.tok == IDENT {
+		p.writeTemplate()
+
+		p.next()
+		if p.lit == "[" {
+			p.writeTemplate()
+			p.next()
+			p.compileExpressions()
+			p.writeTemplate()
+			p.next()
+		} else if p.lit == "." {
+			p.writeTemplate() // symbol
+			p.next()
+			p.writeTemplate() // identifier
+			p.next()
+			p.writeTemplate() // symbol
+			p.next()
+			p.compileExpressionList()
+			p.writeTemplate() // symbol
+			p.next()
+		} else if p.lit == "(" {
+			p.writeTemplate() // symbol
+			p.compileExpressionList()
+			p.next()
+			p.writeTemplate() // symbol
+			p.next()
+		} else if p.lit == "~" || p.lit == "-" {
+			p.writeTemplate() // symbol
+			p.next()
+			p.CompileTerm()
+		}
+	}
+
+	p.indentation--
+	p.writeWithIndentation("</term>\n")
+}
+
+func (p *Parser) compileExpressionList() {
+	p.writeWithIndentation("<expressionList>\n")
+	p.indentation++
+
+	if p.tok != SYMBOL && p.lit != ")" ||
+		p.lit == "(" {
+		p.compileExpressions()
+		for p.tok == SYMBOL && p.lit == "," {
+			p.writeTemplate() // symbol
+			p.next()
+			p.compileExpressions()
+		}
+	}
+
+	p.indentation--
+	p.writeWithIndentation("</expressionList>\n")
 }
 
 func (p *Parser) compileVarDec() {
@@ -162,12 +313,6 @@ func (p *Parser) compileClassVarDec() {
 	p.writeWithIndentation("</classVarDec>\n")
 }
 
-func (p *Parser) compileWhile() {
-	p.expect(KEYWORD, "while")
-	p.next()
-	p.expect(SYMBOL, "(")
-}
-
 func (p *Parser) append(ele Ast) {
 	p.elements = append(p.elements, ele)
 }
@@ -224,21 +369,6 @@ func (p *Parser) next() {
 		fmt.Println("current state", p.tok, p.lit)
 	}
 	p.elements = append(p.elements, Ast{tok, lit})
-}
-
-func (p *Parser) expect(tok Token, lit string) {
-	if p.tok != tok {
-		p.errorExpected("'" + tok.String() + "'")
-	}
-
-	if p.lit != lit {
-		p.errorExpected("'" + lit + "'")
-	}
-}
-
-func (p *Parser) errorExpected(msg string) {
-	msg = "expected" + msg
-	printErr(msg)
 }
 
 const template = "<%v> %v </%v>\n"
