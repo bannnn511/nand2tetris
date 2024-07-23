@@ -81,7 +81,7 @@ var tokens = [...]string{
 	FIELD:       "field",
 	STATIC:      "static",
 	VAR:         "var",
-	INT:         "integerConstant",
+	INT:         "int",
 	CHAR:        "stringConstant",
 	BOOLEAN:     "boolean",
 	VOID:        "void",

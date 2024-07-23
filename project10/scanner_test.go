@@ -308,6 +308,28 @@ func TestScanner_Scan(t *testing.T) {
 				},
 			},
 		},
+		{
+			name: "12. var int length;",
+			src:  []byte("var int length;"),
+			wants: []lexical{
+				{
+					tok: pkg.KEYWORD,
+					lit: "var",
+				},
+				{
+					tok: pkg.KEYWORD,
+					lit: "int",
+				},
+				{
+					tok: pkg.KEYWORD,
+					lit: "length",
+				},
+				{
+					tok: pkg.SYMBOL,
+					lit: ";",
+				},
+			},
+		},
 	}
 
 	for _, tt := range tests {

@@ -283,10 +283,17 @@ func (p *Parser) CompileTerm() {
 	p.writeWithIndentation("<term>\r\n")
 	p.indentation += 2
 
-	if p.tok == KEYWORD {
+	switch p.tok {
+	case INT:
 		p.writeTemplate()
 		p.next()
-	} else if p.tok == IDENT {
+	case CHAR:
+		p.writeTemplate()
+		p.next()
+	case KEYWORD:
+		p.writeTemplate()
+		p.next()
+	case IDENT:
 		p.writeTemplate()
 
 		p.next()
@@ -302,7 +309,7 @@ func (p *Parser) CompileTerm() {
 			p.writeTemplate() // identifier
 			p.next()
 			p.writeTemplate() // symbol
-			p.next()
+			//p.next()
 			p.compileExpressionList()
 			p.writeTemplate() // symbol
 			p.next()
@@ -317,6 +324,7 @@ func (p *Parser) CompileTerm() {
 			p.next()
 			p.CompileTerm()
 		}
+	default:
 	}
 
 	p.indentation -= 2
@@ -336,6 +344,7 @@ func (p *Parser) compileExpressionList() {
 		}
 	}
 	if p.lit == "(" {
+		p.next()
 		p.compileExpressions()
 		for p.tok == SYMBOL && p.lit == "," {
 			p.writeTemplate() // symbol
@@ -482,9 +491,21 @@ func (p *Parser) writeTemplate() {
 	if p.tok == EOF {
 		return
 	}
-	if p.lit == "incSize" {
+	if p.lit == "printInt" {
 		fmt.Println("here")
 	}
+
+	if p.tok == SYMBOL {
+		p.writeSymbol()
+		return
+	}
+
+	if p.tok == INT {
+		p.writeIndentation()
+		p.write(fmt.Sprintf(template, "integerConstant", p.lit, "integerConstant"))
+		return
+	}
+
 	p.writeIndentation()
 	p.write(fmt.Sprintf(template, p.tok, p.lit, p.tok))
 }
@@ -493,14 +514,16 @@ func (p *Parser) writeSymbol() {
 	var symbol string
 	switch p.lit {
 	case "<":
-		symbol = "&lt"
+		symbol = "&lt;"
 	case ">":
-		symbol = "&gt"
+		symbol = "&gt;"
 	case "&":
-		symbol = "&amp"
+		symbol = "&amp;"
+	default:
+		symbol = p.lit
 	}
 	p.writeIndentation()
-	p.write("<symbol>" + symbol + "</symbol>\r\n")
+	p.write("<symbol> " + symbol + " </symbol>\r\n")
 }
 
 func (p *Parser) write(str string) {

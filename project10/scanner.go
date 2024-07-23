@@ -53,7 +53,8 @@ func (s *Scanner) Scan() (tok Token, lit string) {
 				lit = s.scanComment()
 			} else {
 				// division
-				tok = QUO
+				tok = SYMBOL
+				lit = "/"
 			}
 		default:
 			lit = string(ch)
