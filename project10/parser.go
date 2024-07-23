@@ -203,11 +203,11 @@ func (p *Parser) compileIf() {
 
 		p.next()
 		p.writeTemplate() // }
+		p.next()
 	}
 
 	p.indentation -= 2
 	p.writeWithIndentation("</ifStatement>\r\n")
-	p.next()
 }
 
 // 'let' varName ('[' expression ']')? '=' expression ';'
@@ -289,6 +289,7 @@ func (p *Parser) CompileTerm() {
 
 	if p.tok == KEYWORD {
 		p.writeTemplate()
+		p.next()
 	} else if p.tok == IDENT {
 		p.writeTemplate()
 
@@ -330,8 +331,15 @@ func (p *Parser) compileExpressionList() {
 	p.writeWithIndentation("<expressionList>\r\n")
 	p.indentation += 2
 
-	if p.tok != SYMBOL && p.lit != ")" ||
-		p.lit == "(" {
+	if p.tok != SYMBOL && p.lit != ")" {
+		p.compileExpressions()
+		for p.tok == SYMBOL && p.lit == "," {
+			p.writeTemplate() // symbol
+			p.next()
+			p.compileExpressions()
+		}
+	}
+	if p.lit == "(" {
 		p.compileExpressions()
 		for p.tok == SYMBOL && p.lit == "," {
 			p.writeTemplate() // symbol
@@ -483,6 +491,9 @@ const template = "<%v> %v </%v>\r\n"
 func (p *Parser) writeTemplate() {
 	if p.tok == EOF {
 		return
+	}
+	if p.lit == "incSize" {
+		fmt.Println("here")
 	}
 	p.writeIndentation()
 	p.write(fmt.Sprintf(template, p.tok, p.lit, p.tok))

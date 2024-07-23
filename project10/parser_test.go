@@ -51,6 +51,9 @@ func TestParser_ParseFile(t *testing.T) {
 
 			err = os.WriteFile(tt.fields.out, []byte(p.Out()), 0644)
 			assert.NoError(t, err)
+
+			want, err := os.ReadFile(tt.fields.want)
+			assert.Equal(t, string(want), p.Out())
 		})
 	}
 }
