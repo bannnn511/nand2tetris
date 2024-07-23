@@ -56,10 +56,6 @@ func (p *Parser) ParseFile() {
 	p.write("</class>\r\n")
 }
 
-func (p *Parser) write(str string) {
-	p.out.WriteString(str)
-}
-
 func (p *Parser) compileSubroutine() {
 	p.writeWithIndentation("<subroutineDec>\r\n")
 	p.indentation += 2
@@ -454,12 +450,6 @@ func (p *Parser) printTree() {
 	}
 }
 
-// func (p *Parser) tokenized() {
-// 	for p.tok != EOF {
-// 		p.next()
-// 	}
-// }
-
 func (p *Parser) next() {
 	tok, lit := p.scanner.Scan()
 	if tok == COMMENT {
@@ -511,6 +501,10 @@ func (p *Parser) writeSymbol() {
 	}
 	p.writeIndentation()
 	p.write("<symbol>" + symbol + "</symbol>\r\n")
+}
+
+func (p *Parser) write(str string) {
+	p.out.WriteString(str)
 }
 
 func (p *Parser) Out() string {

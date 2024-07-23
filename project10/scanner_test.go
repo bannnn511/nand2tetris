@@ -188,7 +188,7 @@ func TestScanner_Scan(t *testing.T) {
 				},
 				{
 					tok: pkg.CHAR,
-					lit: "negative",
+					lit: `negative`,
 				},
 			},
 		},
@@ -209,6 +209,102 @@ func TestScanner_Scan(t *testing.T) {
 				{
 					tok: pkg.COMMENT,
 					lit: "/** aaa */",
+				},
+			},
+		},
+		{
+			name: `10.let length = Keyboard.readInt("HOW MANY NUMBERS? ");`,
+			src:  []byte(`let length = Keyboard.readInt("HOW MANY NUMBERS? ");`),
+			wants: []lexical{
+				{
+					tok: pkg.KEYWORD,
+					lit: "let",
+				},
+				{
+					tok: pkg.IDENT,
+					lit: "length",
+				},
+				{
+					tok: pkg.SYMBOL,
+					lit: "=",
+				},
+				{
+					tok: pkg.IDENT,
+					lit: "Keyboard",
+				},
+				{
+					tok: pkg.SYMBOL,
+					lit: ".",
+				},
+				{
+					tok: pkg.IDENT,
+					lit: "readInt",
+				},
+				{
+					tok: pkg.SYMBOL,
+					lit: "(",
+				},
+				{
+					tok: pkg.CHAR,
+					lit: `HOW MANY NUMBERS? `,
+				},
+				{
+					tok: pkg.SYMBOL,
+					lit: ")",
+				},
+				{
+					tok: pkg.SYMBOL,
+					lit: ";",
+				},
+			},
+		},
+		{
+			name: "11. let a[1] = a[2];",
+			src:  []byte(`let a[1] = a[2];`),
+			wants: []lexical{
+				{
+					tok: pkg.KEYWORD,
+					lit: "let",
+				},
+				{
+					tok: pkg.IDENT,
+					lit: "a",
+				},
+				{
+					tok: pkg.SYMBOL,
+					lit: "[",
+				},
+				{
+					tok: pkg.INT,
+					lit: "1",
+				},
+				{
+					tok: pkg.SYMBOL,
+					lit: "]",
+				},
+				{
+					tok: pkg.SYMBOL,
+					lit: "=",
+				},
+				{
+					tok: pkg.IDENT,
+					lit: "a",
+				},
+				{
+					tok: pkg.SYMBOL,
+					lit: "[",
+				},
+				{
+					tok: pkg.INT,
+					lit: "2",
+				},
+				{
+					tok: pkg.SYMBOL,
+					lit: "]",
+				},
+				{
+					tok: pkg.SYMBOL,
+					lit: ";",
 				},
 			},
 		},

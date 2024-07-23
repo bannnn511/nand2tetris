@@ -67,6 +67,7 @@ func (s *Scanner) Scan() (tok Token, lit string) {
 func (s *Scanner) next() {
 	if s.rdOffset >= len(s.src) {
 		s.ch = eof
+		s.offset = len(s.src)
 		return
 	}
 
@@ -126,13 +127,16 @@ func (s *Scanner) scanString() string {
 	offs := s.offset
 	for {
 		ch := s.ch
+		if ch == '\n' || ch < 0 {
+			break
+		}
 		s.next()
 		if ch == '"' {
 			break
 		}
 	}
 
-	return string(s.src[offs:s.offset])
+	return string(s.src[offs : s.offset-1])
 }
 
 func (s *Scanner) scanComment() string {
