@@ -245,13 +245,14 @@ func (p *Parser) compileWhile() {
 	p.writeWithIndentation("<whileStatement>\r\n")
 	p.indentation += 2
 
+	p.writeTemplate() // while
+
 	p.next()
 	p.writeTemplate() // (
 
 	p.next()
 	p.compileExpressions()
 
-	p.next()
 	p.writeTemplate() // )
 
 	p.next()
@@ -260,7 +261,6 @@ func (p *Parser) compileWhile() {
 	p.next()
 	p.compileStatements()
 
-	p.next()
 	p.writeTemplate() // }
 
 	p.indentation -= 2
