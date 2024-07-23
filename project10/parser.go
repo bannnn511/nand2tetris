@@ -127,7 +127,7 @@ func (p *Parser) compileReturn() {
 	p.writeTemplate()
 
 	p.next()
-	if p.tok == SYMBOL && p.lit != ";" {
+	if p.tok != SYMBOL && p.lit != ";" {
 		p.compileExpressions()
 	}
 

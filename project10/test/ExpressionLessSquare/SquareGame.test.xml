@@ -1,48 +1,59 @@
 <class>
- <keyword> class </keyword>
- <identifier> SquareGame </identifier>
- <symbol> { </symbol>
- <classVarDec>
-  <keyword> field </keyword>
-  <identifier> Square </identifier>
-  <identifier> square </identifier>
-  <symbol> ; </symbol>
- </classVarDec>
- <classVarDec>
-  <keyword> field </keyword>
-  <keyword> int </keyword>
-  <identifier> direction </identifier>
-  <symbol> ; </symbol>
- </classVarDec>
- <subroutineDec>
-  <keyword> constructor </keyword>
+  <keyword> class </keyword>
   <identifier> SquareGame </identifier>
-  <identifier> new </identifier>
-  <symbol> ( </symbol>
-  <parameterList>
-  </parameterList>
-  <symbol> ) </symbol>
-  <subroutineBody>
-   <symbol> { </symbol>
-   <statements>
-    <letStatement>
-     <keyword> let </keyword>
-     <identifier> square </identifier>
-     <symbol> = </symbol>
-     <expression>
-      <term>
-       <identifier> square </identifier>
-      </term>
+  <symbol> { </symbol>
+  <classVarDec>
+    <keyword> field </keyword>
+    <identifier> Square </identifier>
+    <identifier> square </identifier>
+    <symbol> ; </symbol>
+  </classVarDec>
+  <classVarDec>
+    <keyword> field </keyword>
+    <keyword> int </keyword>
+    <identifier> direction </identifier>
+    <symbol> ; </symbol>
+  </classVarDec>
+  <subroutineDec>
+    <keyword> constructor </keyword>
+    <identifier> SquareGame </identifier>
+    <identifier> new </identifier>
+    <symbol> ( </symbol>
+    <parameterList>
+    </parameterList>
+    <symbol> ) </symbol>
+    <subroutineBody>
+      <symbol> { </symbol>
+      <statements>
+        <letStatement>
+          <keyword> let </keyword>
+          <identifier> square </identifier>
+          <symbol> = </symbol>
+          <expression>
+            <term>
+              <identifier> square </identifier>
+            </term>
+          </expression>
+          <symbol> ; </symbol>
+        </letStatement>
+        <letStatement>
+          <keyword> let </keyword>
+          <identifier> direction </identifier>
+          <symbol> = </symbol>
+          <expression>
+            <term>
+              <identifier> direction </identifier>
+            </term>
+          </expression>
+          <symbol> ; </symbol>
+        </letStatement>
+        <returnStatement>
+          <keyword> return </keyword>
+          <identifier> square </identifier>
+        </returnStatement>
+      </statements>
       <symbol> ; </symbol>
-      <term>
-       <keyword> let </keyword>
-      </term>
-     </expression>
-     <keyword> let </keyword>
-    </letStatement>
-   </statements>
-   <identifier> direction </identifier>
-  </subroutineBody>
- </subroutineDec>
- <identifier> direction </identifier>
+    </subroutineBody>
+  </subroutineDec>
+  <symbol> } </symbol>
 </class>

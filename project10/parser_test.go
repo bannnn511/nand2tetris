@@ -24,22 +24,22 @@ func TestParser_ParseFile(t *testing.T) {
 				out:  "./test/ExpressionLessSquare/Main.test.xml",
 			},
 		},
-		// {
-		//	"2. ExpressionLessSquare Square.jack",
-		//	fields{
-		//		dest: "./test/ExpressionLessSquare/Square.jack",
-		//		want: "./test/ExpressionLessSquare/Square.xml",
-		//		out:  "./test/ExpressionLessSquare/Square.test.xml",
-		//	},
-		// },
-		// {
-		//	"3. ExpressionLessSquare SquareGame.jack",
-		//	fields{
-		//		dest: "./test/ExpressionLessSquare/SquareGame.jack",
-		//		want: "./test/ExpressionLessSquare/SquareGame.xml",
-		//		out:  "./test/ExpressionLessSquare/SquareGame.test.xml",
-		//	},
-		// },
+		{
+			"2. ExpressionLessSquare Square.jack",
+			fields{
+				dest: "./test/ExpressionLessSquare/Square.jack",
+				want: "./test/ExpressionLessSquare/Square.xml",
+				out:  "./test/ExpressionLessSquare/Square.test.xml",
+			},
+		},
+		{
+			"3. ExpressionLessSquare SquareGame.jack",
+			fields{
+				dest: "./test/ExpressionLessSquare/SquareGame.jack",
+				want: "./test/ExpressionLessSquare/SquareGame.xml",
+				out:  "./test/ExpressionLessSquare/SquareGame.test.xml",
+			},
+		},
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
