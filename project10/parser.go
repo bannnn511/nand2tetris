@@ -5,8 +5,6 @@ import (
 	"strings"
 )
 
-const debug = false
-
 type Ast struct {
 	tok Token
 	lit string
@@ -199,7 +197,7 @@ func (p *Parser) compileIf() {
 		// if else body is empty -> dont call next
 		prev := p.lit
 		p.compileStatements()
-		if prev != "}" {
+		if prev != "}" && p.lit != "}" {
 			p.next()
 		}
 
@@ -274,9 +272,6 @@ func (p *Parser) compileExpressions() {
 	p.indentation += 2
 
 	p.CompileTerm()
-	if p.lit == "*" {
-		println("here")
-	}
 	for p.tok == SYMBOL && IsOp(p.lit) {
 		p.writeTemplate()
 		p.next()
@@ -326,11 +321,12 @@ func (p *Parser) CompileTerm() {
 			p.next()
 			p.writeTemplate() // symbol
 			p.next()
-		} else if p.lit == "~" || p.lit == "-" {
-			p.writeTemplate() // symbol
-			p.next()
-			p.CompileTerm()
 		}
+		// else if p.lit == "~" || p.lit == "-" {
+		//	p.writeTemplate() // symbol
+		//	p.next()
+		//	p.CompileTerm()
+		// }
 	case SYMBOL:
 		if p.lit == "(" {
 			p.writeTemplate() // symbol
@@ -362,6 +358,8 @@ func (p *Parser) compileExpressionList() {
 			p.compileExpressions()
 		}
 	}
+
+	// if after '(' is a '(' -> new expression
 	if p.lit == "(" {
 		p.next()
 		if p.lit == ")" {
@@ -448,40 +446,6 @@ func (p *Parser) append(ele Ast) {
 	p.elements = append(p.elements, ele)
 }
 
-func (p *Parser) GetXML() string {
-	var sb strings.Builder
-	for _, node := range p.elements {
-		switch node.tok {
-		case START:
-			sb.WriteString("<tokens>\r\n")
-		case EOF:
-			sb.WriteString("</tokens>")
-		case COMMENT:
-			continue
-		default:
-			v := fmt.Sprintf("<%v> %v </%v>\r\n", node.tok, node.lit, node.tok)
-			sb.WriteString(v)
-		}
-	}
-
-	return sb.String()
-}
-
-func (p *Parser) printTree() {
-	for _, node := range p.elements {
-		switch node.tok {
-		case START:
-			fmt.Println("<tokens>")
-		case EOF:
-			fmt.Println("</tokens>")
-		case COMMENT:
-			continue
-		default:
-			fmt.Printf("<%v> %v </%v>\r\n", node.tok, node.lit, node.tok)
-		}
-	}
-}
-
 func (p *Parser) next() {
 	tok, lit := p.scanner.Scan()
 	if tok == COMMENT {
@@ -490,9 +454,6 @@ func (p *Parser) next() {
 	}
 	p.tok = tok
 	p.lit = lit
-	if debug {
-		fmt.Println("current state", p.tok, p.lit)
-	}
 	p.elements = append(p.elements, Ast{tok, lit})
 }
 
@@ -509,10 +470,23 @@ func (p *Parser) writeIndentation() {
 
 const template = "<%v> %v </%v>\r\n"
 
+var i = 0
+
 // writeTemplate writes KEYWORD, IDENT and SYMBOL token
 func (p *Parser) writeTemplate() {
 	if p.tok == EOF {
 		return
+	}
+
+	if p.lit == "moveLeft" {
+		println("here")
+	}
+
+	if p.lit == "drawRectangle" {
+		i++
+		if i == 7 {
+			println("her")
+		}
 	}
 
 	if p.tok == SYMBOL {

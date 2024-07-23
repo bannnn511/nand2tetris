@@ -230,10 +230,14 @@
               <symbol> ; </symbol>
             </letStatement>
           </statements>
-          <keyword> return </keyword>
+          <symbol> } </symbol>
         </ifStatement>
+        <returnStatement>
+          <keyword> return </keyword>
+          <symbol> ; </symbol>
+        </returnStatement>
       </statements>
-      <symbol> ; </symbol>
+      <symbol> } </symbol>
     </subroutineBody>
   </subroutineDec>
   <symbol> } </symbol>
