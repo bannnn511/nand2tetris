@@ -146,7 +146,7 @@ func init() {
 	}
 
 	ops = make(map[string]Token, op_end-(op_beg+1))
-	for i := symbol_beg + 1; i < symbol_end; i++ {
+	for i := op_beg + 1; i < op_end; i++ {
 		ops[tokens[i]] = i
 	}
 }

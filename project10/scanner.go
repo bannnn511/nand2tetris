@@ -71,9 +71,6 @@ func (s *Scanner) next() {
 	}
 
 	s.offset = s.rdOffset
-	// if s.ch == '\n' {
-	//	return
-	// }
 
 	r, w := rune(s.src[s.rdOffset]), 1
 	switch {

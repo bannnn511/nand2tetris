@@ -19,7 +19,7 @@ type Parser struct {
 	fileName    string
 	scanner     Scanner
 	indentation int
-	Out         strings.Builder
+	out         strings.Builder
 }
 
 func (p *Parser) Init(filename string, src []byte) {
@@ -32,8 +32,8 @@ func (p *Parser) Init(filename string, src []byte) {
 
 func (p *Parser) ParseFile() {
 	p.next()
-	p.write("<class>\n")
-	p.indentation++
+	p.write("<class>\r\n")
+	p.indentation += 2
 
 	p.writeTemplate() //  class
 	p.next()
@@ -52,17 +52,17 @@ func (p *Parser) ParseFile() {
 	}
 
 	p.writeTemplate()
-	p.indentation--
-	p.write("</class>\n")
+	p.indentation -= 2
+	p.write("</class>\r\n")
 }
 
 func (p *Parser) write(str string) {
-	p.Out.WriteString(str)
+	p.out.WriteString(str)
 }
 
 func (p *Parser) compileSubroutine() {
-	p.writeWithIndentation("<subroutineDec>\n")
-	p.indentation++
+	p.writeWithIndentation("<subroutineDec>\r\n")
+	p.indentation += 2
 	p.writeTemplate() // kw
 
 	p.next()
@@ -78,8 +78,8 @@ func (p *Parser) compileSubroutine() {
 	p.writeTemplate()        // )
 	p.next()
 
-	p.writeWithIndentation("<subroutineBody>\n")
-	p.indentation++
+	p.writeWithIndentation("<subroutineBody>\r\n")
+	p.indentation += 2
 	p.writeTemplate()
 
 	p.next()
@@ -90,15 +90,16 @@ func (p *Parser) compileSubroutine() {
 	p.compileStatements()
 
 	p.writeTemplate() // symbol
-	p.indentation--
-	p.writeWithIndentation("</subroutineBody>\n")
-	p.indentation--
-	p.writeWithIndentation("</subroutineDec>\n")
+	p.indentation -= 2
+	p.writeWithIndentation("</subroutineBody>\r\n")
+	p.indentation -= 2
+	p.writeWithIndentation("</subroutineDec>\r\n")
+	p.next()
 }
 
 func (p *Parser) compileStatements() {
-	p.writeWithIndentation("<statements>\n")
-	p.indentation++
+	p.writeWithIndentation("<statements>\r\n")
+	p.indentation += 2
 
 	for p.tok == KEYWORD {
 		switch p.lit {
@@ -115,13 +116,13 @@ func (p *Parser) compileStatements() {
 		}
 	}
 
-	p.indentation--
-	p.writeWithIndentation("</statements>\n")
+	p.indentation -= 2
+	p.writeWithIndentation("</statements>\r\n")
 }
 
 func (p *Parser) compileReturn() {
-	p.writeWithIndentation("<returnStatement>\n")
-	p.indentation++
+	p.writeWithIndentation("<returnStatement>\r\n")
+	p.indentation += 2
 
 	p.writeTemplate()
 
@@ -132,15 +133,15 @@ func (p *Parser) compileReturn() {
 
 	p.writeTemplate()
 
-	p.indentation--
-	p.writeWithIndentation("</returnStatement>\n")
+	p.indentation -= 2
+	p.writeWithIndentation("</returnStatement>\r\n")
 	p.next()
 }
 
 // 'do' subroutineCall ';'
 func (p *Parser) compileDo() {
-	p.writeWithIndentation("<doStatement>\n")
-	p.indentation++
+	p.writeWithIndentation("<doStatement>\r\n")
+	p.indentation += 2
 
 	p.writeTemplate() // do
 	p.next()
@@ -164,15 +165,15 @@ func (p *Parser) compileDo() {
 	p.next()
 	p.writeTemplate() // symbol
 
-	p.indentation--
-	p.writeWithIndentation("</doStatement>\n")
+	p.indentation -= 2
+	p.writeWithIndentation("</doStatement>\r\n")
 	p.next()
 }
 
 // 'if' '(' expression ')' '{' statements '}' ( 'else' '{' statements '}' )?
 func (p *Parser) compileIf() {
-	p.writeWithIndentation("<ifStatement>\n")
-	p.indentation++
+	p.writeWithIndentation("<ifStatement>\r\n")
+	p.indentation += 2
 
 	p.writeTemplate() // if
 
@@ -189,12 +190,9 @@ func (p *Parser) compileIf() {
 
 	p.next()
 	p.compileStatements()
-
-	p.next()
 	p.writeTemplate() // }
 
 	p.next()
-
 	if p.tok == KEYWORD && p.lit == "else" {
 		p.writeTemplate() // else
 
@@ -207,14 +205,15 @@ func (p *Parser) compileIf() {
 		p.writeTemplate() // }
 	}
 
-	p.indentation--
-	p.writeWithIndentation("</ifStatement>\n")
+	p.indentation -= 2
+	p.writeWithIndentation("</ifStatement>\r\n")
+	p.next()
 }
 
 // 'let' varName ('[' expression ']')? '=' expression ';'
 func (p *Parser) compileLet() {
-	p.writeWithIndentation("<letStatement>\n")
-	p.indentation++
+	p.writeWithIndentation("<letStatement>\r\n")
+	p.indentation += 2
 
 	p.writeTemplate() // let
 
@@ -236,15 +235,15 @@ func (p *Parser) compileLet() {
 	p.compileExpressions()
 	p.writeTemplate() // ;
 
-	p.indentation--
-	p.writeWithIndentation("</letStatement>\n")
+	p.indentation -= 2
+	p.writeWithIndentation("</letStatement>\r\n")
 	p.next()
 }
 
 // 'while' '(' expression ')' '{' statements '}'
 func (p *Parser) compileWhile() {
-	p.writeWithIndentation("<whileStatement>\n")
-	p.indentation++
+	p.writeWithIndentation("<whileStatement>\r\n")
+	p.indentation += 2
 
 	p.next()
 	p.writeTemplate() // (
@@ -264,14 +263,14 @@ func (p *Parser) compileWhile() {
 	p.next()
 	p.writeTemplate() // }
 
-	p.indentation--
-	p.writeWithIndentation("</whileStatement>\n")
+	p.indentation -= 2
+	p.writeWithIndentation("</whileStatement>\r\n")
 	p.next()
 }
 
 func (p *Parser) compileExpressions() {
-	p.writeWithIndentation("<expression>\n")
-	p.indentation++
+	p.writeWithIndentation("<expression>\r\n")
+	p.indentation += 2
 
 	p.CompileTerm()
 	for p.tok == SYMBOL && IsOp(p.lit) {
@@ -280,13 +279,13 @@ func (p *Parser) compileExpressions() {
 		p.CompileTerm()
 	}
 
-	p.indentation--
-	p.writeWithIndentation("</expression>\n")
+	p.indentation -= 2
+	p.writeWithIndentation("</expression>\r\n")
 }
 
 func (p *Parser) CompileTerm() {
-	p.writeWithIndentation("<term>\n")
-	p.indentation++
+	p.writeWithIndentation("<term>\r\n")
+	p.indentation += 2
 
 	if p.tok == KEYWORD {
 		p.writeTemplate()
@@ -323,13 +322,13 @@ func (p *Parser) CompileTerm() {
 		}
 	}
 
-	p.indentation--
-	p.writeWithIndentation("</term>\n")
+	p.indentation -= 2
+	p.writeWithIndentation("</term>\r\n")
 }
 
 func (p *Parser) compileExpressionList() {
-	p.writeWithIndentation("<expressionList>\n")
-	p.indentation++
+	p.writeWithIndentation("<expressionList>\r\n")
+	p.indentation += 2
 
 	if p.tok != SYMBOL && p.lit != ")" ||
 		p.lit == "(" {
@@ -341,19 +340,20 @@ func (p *Parser) compileExpressionList() {
 		}
 	}
 
-	p.indentation--
-	p.writeWithIndentation("</expressionList>\n")
+	p.indentation -= 2
+	p.writeWithIndentation("</expressionList>\r\n")
 }
 
 func (p *Parser) compileVarDec() {
-	p.writeWithIndentation("<varDec>\n")
-	p.indentation++
+	p.writeWithIndentation("<varDec>\r\n")
+	p.indentation += 2
 
 	p.writeTemplate()
 	p.next()
+	p.compileTypeAndVarName()
 
-	p.indentation--
-	p.writeWithIndentation("</varDec>\n")
+	p.indentation -= 2
+	p.writeWithIndentation("</varDec>\r\n")
 }
 
 func (p *Parser) compileTypeAndVarName() {
@@ -376,8 +376,8 @@ func (p *Parser) compileTypeAndVarName() {
 }
 
 func (p *Parser) compileParameterList() {
-	p.writeWithIndentation("<parameterList>\n")
-	p.indentation++
+	p.writeWithIndentation("<parameterList>\r\n")
+	p.indentation += 2
 
 	for p.tok != SYMBOL {
 		p.writeTemplate()
@@ -392,20 +392,20 @@ func (p *Parser) compileParameterList() {
 		}
 	}
 
-	p.indentation--
-	p.writeWithIndentation("</parameterList>\n")
+	p.indentation -= 2
+	p.writeWithIndentation("</parameterList>\r\n")
 }
 
 func (p *Parser) compileClassVarDec() {
-	p.writeWithIndentation("<classVarDec>\n")
-	p.indentation++
+	p.writeWithIndentation("<classVarDec>\r\n")
+	p.indentation += 2
 	p.writeTemplate()
 	p.next()
 
 	p.compileTypeAndVarName()
 
-	p.indentation--
-	p.writeWithIndentation("</classVarDec>\n")
+	p.indentation -= 2
+	p.writeWithIndentation("</classVarDec>\r\n")
 }
 
 func (p *Parser) append(ele Ast) {
@@ -417,13 +417,13 @@ func (p *Parser) GetXML() string {
 	for _, node := range p.elements {
 		switch node.tok {
 		case START:
-			sb.WriteString("<tokens>\n")
+			sb.WriteString("<tokens>\r\n")
 		case EOF:
 			sb.WriteString("</tokens>")
 		case COMMENT:
 			continue
 		default:
-			v := fmt.Sprintf("<%v> %v </%v>\n", node.tok, node.lit, node.tok)
+			v := fmt.Sprintf("<%v> %v </%v>\r\n", node.tok, node.lit, node.tok)
 			sb.WriteString(v)
 		}
 	}
@@ -441,7 +441,7 @@ func (p *Parser) printTree() {
 		case COMMENT:
 			continue
 		default:
-			fmt.Printf("<%v> %v </%v>\n", node.tok, node.lit, node.tok)
+			fmt.Printf("<%v> %v </%v>\r\n", node.tok, node.lit, node.tok)
 		}
 	}
 }
@@ -466,8 +466,6 @@ func (p *Parser) next() {
 	p.elements = append(p.elements, Ast{tok, lit})
 }
 
-const template = "<%v> %v </%v>\n"
-
 func (p *Parser) writeWithIndentation(str string) {
 	p.writeIndentation()
 	p.write(str)
@@ -479,6 +477,8 @@ func (p *Parser) writeIndentation() {
 	}
 }
 
+const template = "<%v> %v </%v>\r\n"
+
 // writeTemplate writes KEYWORD, IDENT and SYMBOL token
 func (p *Parser) writeTemplate() {
 	if p.tok == EOF {
@@ -486,4 +486,22 @@ func (p *Parser) writeTemplate() {
 	}
 	p.writeIndentation()
 	p.write(fmt.Sprintf(template, p.tok, p.lit, p.tok))
+}
+
+func (p *Parser) writeSymbol() {
+	var symbol string
+	switch p.lit {
+	case "<":
+		symbol = "&lt"
+	case ">":
+		symbol = "&gt"
+	case "&":
+		symbol = "&amp"
+	}
+	p.writeIndentation()
+	p.write("<symbol>" + symbol + "</symbol>\r\n")
+}
+
+func (p *Parser) Out() string {
+	return p.out.String()
 }

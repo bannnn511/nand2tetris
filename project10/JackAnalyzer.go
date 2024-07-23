@@ -41,10 +41,8 @@ func main() {
 		}
 		parser.Init(jack, src)
 		parser.ParseFile()
-		parser.printTree()
 
-		fileXML := parser.GetXML()
-		writeErr := os.WriteFile(jack+".xml", []byte(fileXML), 0644)
+		writeErr := os.WriteFile(jack+".xml", []byte(parser.Out()), 0644)
 		if writeErr != nil {
 			printErr(err.Error())
 		}

@@ -1,43 +1,56 @@
-package main_test
+package main
 
 import (
-	"fmt"
-	pkg "project10"
+	"github.com/stretchr/testify/assert"
+	"os"
 	"testing"
 )
 
 func TestParser_ParseFile(t *testing.T) {
-
+	type fields struct {
+		dest string
+		want string
+		out  string
+	}
 	tests := []struct {
-		name string
-		src  []byte
+		name   string
+		fields fields
 	}{
 		{
-			"1. test main class",
-			[]byte(`
-class Square {
-
-   field int x, y; // screen location of the square's top-left corner
-   field int size; // length of this square, in pixels
-
-   /** Constructs a new square with a given location and size. */
-   constructor Square new(int Ax, int Ay, int Asize) {
-      let x = Ax;
-      let y = Ay;
-      let size = Asize;
-      do draw();
-      return this;
-   }
-		`),
+			"1. ExpressionLessSquare Main.jack",
+			fields{
+				dest: "./test/ExpressionLessSquare/Main.jack",
+				want: "./test/ExpressionLessSquare/Main.xml",
+				out:  "./test/ExpressionLessSquare/Main.test.xml",
+			},
 		},
+		// {
+		//	"2. ExpressionLessSquare Square.jack",
+		//	fields{
+		//		dest: "./test/ExpressionLessSquare/Square.jack",
+		//		want: "./test/ExpressionLessSquare/Square.xml",
+		//		out:  "./test/ExpressionLessSquare/Square.test.xml",
+		//	},
+		// },
+		// {
+		//	"3. ExpressionLessSquare SquareGame.jack",
+		//	fields{
+		//		dest: "./test/ExpressionLessSquare/SquareGame.jack",
+		//		want: "./test/ExpressionLessSquare/SquareGame.xml",
+		//		out:  "./test/ExpressionLessSquare/SquareGame.test.xml",
+		//	},
+		// },
 	}
-
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			var parser pkg.Parser
-			parser.Init("", tt.src)
-			parser.ParseFile()
-			fmt.Println(parser.Out.String())
+			src, err := os.ReadFile(tt.fields.dest)
+			assert.NoError(t, err)
+			var p Parser
+			p.Init("", src)
+			p.ParseFile()
+
+			err = os.WriteFile(tt.fields.out, []byte(p.Out()), 0644)
+			assert.NoError(t, err)
 		})
 	}
 }
