@@ -107,13 +107,108 @@ func (p *Parser) compileStatements() {
 		case "while":
 			p.compileWhile()
 		case "if":
+			p.compileIf()
 		case "do":
+			p.compileDo()
 		case "return":
+			p.compileReturn()
 		}
 	}
 
 	p.indentation--
 	p.writeWithIndentation("</statements>\n")
+}
+
+func (p *Parser) compileReturn() {
+	p.writeWithIndentation("<returnStatement>\n")
+	p.indentation++
+
+	p.writeTemplate()
+
+	p.next()
+	if p.tok == SYMBOL && p.lit != ";" {
+		p.compileExpressions()
+	}
+
+	p.writeTemplate()
+
+	p.indentation--
+	p.writeWithIndentation("</returnStatement>\n")
+	p.next()
+}
+
+// 'do' subroutineCall ';'
+func (p *Parser) compileDo() {
+	p.writeWithIndentation("<doStatement>\n")
+	p.indentation++
+
+	p.writeTemplate() // do
+	p.next()
+
+	p.writeTemplate() // identifier
+	p.next()
+	if p.lit == "." {
+		p.writeTemplate() // symbol
+		p.next()
+		p.writeTemplate() // identifier
+		p.next()
+	}
+
+	p.writeTemplate() // symbol
+	p.next()
+
+	p.compileExpressionList()
+
+	p.writeTemplate() // symbol
+
+	p.next()
+	p.writeTemplate() // symbol
+
+	p.indentation--
+	p.writeWithIndentation("</doStatement>\n")
+	p.next()
+}
+
+// 'if' '(' expression ')' '{' statements '}' ( 'else' '{' statements '}' )?
+func (p *Parser) compileIf() {
+	p.writeWithIndentation("<ifStatement>\n")
+	p.indentation++
+
+	p.writeTemplate() // if
+
+	p.next()
+	p.writeTemplate() // (
+
+	p.next()
+	p.compileExpressions()
+
+	p.writeTemplate() // )
+
+	p.next()
+	p.writeTemplate() // {
+
+	p.next()
+	p.compileStatements()
+
+	p.next()
+	p.writeTemplate() // }
+
+	p.next()
+
+	if p.tok == KEYWORD && p.lit == "else" {
+		p.writeTemplate() // else
+
+		p.next()
+		p.writeTemplate() // {
+
+		p.compileStatements()
+
+		p.next()
+		p.writeTemplate() // }
+	}
+
+	p.indentation--
+	p.writeWithIndentation("</ifStatement>\n")
 }
 
 // 'let' varName ('[' expression ']')? '=' expression ';'
