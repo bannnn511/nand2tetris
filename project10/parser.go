@@ -97,7 +97,7 @@ func (p *Parser) compileStatements() {
 	p.writeWithIndentation("<statements>\r\n")
 	p.indentation += 2
 
-	for p.tok == KEYWORD {
+	for p.tok == KEYWORD && p.lit != "}" {
 		switch p.lit {
 		case "let":
 			p.compileLet()
@@ -194,10 +194,15 @@ func (p *Parser) compileIf() {
 
 		p.next()
 		p.writeTemplate() // {
-
-		p.compileStatements()
-
 		p.next()
+
+		// if else body is empty -> dont call next
+		prev := p.lit
+		p.compileStatements()
+		if prev != "}" {
+			p.next()
+		}
+
 		p.writeTemplate() // }
 		p.next()
 	}
@@ -269,6 +274,9 @@ func (p *Parser) compileExpressions() {
 	p.indentation += 2
 
 	p.CompileTerm()
+	if p.lit == "*" {
+		println("here")
+	}
 	for p.tok == SYMBOL && IsOp(p.lit) {
 		p.writeTemplate()
 		p.next()
@@ -295,7 +303,6 @@ func (p *Parser) CompileTerm() {
 		p.next()
 	case IDENT:
 		p.writeTemplate()
-
 		p.next()
 		if p.lit == "[" {
 			p.writeTemplate()
@@ -324,6 +331,18 @@ func (p *Parser) CompileTerm() {
 			p.next()
 			p.CompileTerm()
 		}
+	case SYMBOL:
+		if p.lit == "(" {
+			p.writeTemplate() // symbol
+			p.next()
+			p.compileExpressions()
+			p.writeTemplate() // symbol
+			p.next()
+		} else if p.lit == "~" || p.lit == "-" {
+			p.writeTemplate() // symbol
+			p.next()
+			p.CompileTerm()
+		}
 	default:
 	}
 
@@ -345,6 +364,9 @@ func (p *Parser) compileExpressionList() {
 	}
 	if p.lit == "(" {
 		p.next()
+		if p.lit == ")" {
+			goto exit
+		}
 		p.compileExpressions()
 		for p.tok == SYMBOL && p.lit == "," {
 			p.writeTemplate() // symbol
@@ -353,6 +375,7 @@ func (p *Parser) compileExpressionList() {
 		}
 	}
 
+exit:
 	p.indentation -= 2
 	p.writeWithIndentation("</expressionList>\r\n")
 }
@@ -491,9 +514,6 @@ func (p *Parser) writeTemplate() {
 	if p.tok == EOF {
 		return
 	}
-	if p.lit == "printInt" {
-		fmt.Println("here")
-	}
 
 	if p.tok == SYMBOL {
 		p.writeSymbol()
@@ -503,6 +523,12 @@ func (p *Parser) writeTemplate() {
 	if p.tok == INT {
 		p.writeIndentation()
 		p.write(fmt.Sprintf(template, "integerConstant", p.lit, "integerConstant"))
+		return
+	}
+
+	if p.tok == CHAR {
+		p.writeIndentation()
+		p.write(fmt.Sprintf(template, "stringConstant", p.lit, "stringConstant"))
 		return
 	}
 

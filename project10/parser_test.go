@@ -48,6 +48,30 @@ func TestParser_ParseFile(t *testing.T) {
 				out:  "./test/ArrayTest/Main.test.xml",
 			},
 		},
+		{
+			"5. Square Main.jack",
+			fields{
+				dest: "./test/Square/Main.jack",
+				want: "./test/Square/Main.xml",
+				out:  "./test/Square/Main.test.xml",
+			},
+		},
+		{
+			"6. Square Square.jack",
+			fields{
+				dest: "./test/Square/Square.jack",
+				want: "./test/Square/Square.xml",
+				out:  "./test/Square/Square.test.xml",
+			},
+		},
+		{
+			"7. Square SquareGame.jack",
+			fields{
+				dest: "./test/Square/SquareGame.jack",
+				want: "./test/Square/SquareGame.xml",
+				out:  "./test/Square/SquareGame.test.xml",
+			},
+		},
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {

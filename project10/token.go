@@ -55,6 +55,7 @@ const (
 	op_beg
 	ADD // +
 	SUB // -
+	MUL // *
 	QUO // /
 	AND // &
 	OR  // |
@@ -82,7 +83,7 @@ var tokens = [...]string{
 	STATIC:      "static",
 	VAR:         "var",
 	INT:         "int",
-	CHAR:        "stringConstant",
+	CHAR:        "char",
 	BOOLEAN:     "boolean",
 	VOID:        "void",
 	TRUE:        "true",
@@ -109,6 +110,7 @@ var tokens = [...]string{
 
 	ADD: "+",
 	SUB: "-",
+	MUL: "*",
 	QUO: "/",
 	AND: "&",
 	OR:  "|",

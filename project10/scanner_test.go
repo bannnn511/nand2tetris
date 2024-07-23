@@ -321,7 +321,7 @@ func TestScanner_Scan(t *testing.T) {
 					lit: "int",
 				},
 				{
-					tok: pkg.KEYWORD,
+					tok: pkg.IDENT,
 					lit: "length",
 				},
 				{
