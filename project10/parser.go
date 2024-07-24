@@ -311,7 +311,7 @@ func (p *Parser) CompileTerm() {
 			p.writeTemplate() // identifier
 			p.next()
 			p.writeTemplate() // symbol
-			//p.next()
+			p.next()
 			p.compileExpressionList()
 			p.writeTemplate() // symbol
 			p.next()
@@ -361,10 +361,6 @@ func (p *Parser) compileExpressionList() {
 
 	// if after '(' is a '(' -> new expression
 	if p.lit == "(" {
-		p.next()
-		if p.lit == ")" {
-			goto exit
-		}
 		p.compileExpressions()
 		for p.tok == SYMBOL && p.lit == "," {
 			p.writeTemplate() // symbol
@@ -373,7 +369,6 @@ func (p *Parser) compileExpressionList() {
 		}
 	}
 
-exit:
 	p.indentation -= 2
 	p.writeWithIndentation("</expressionList>\r\n")
 }
@@ -476,17 +471,6 @@ var i = 0
 func (p *Parser) writeTemplate() {
 	if p.tok == EOF {
 		return
-	}
-
-	if p.lit == "moveLeft" {
-		println("here")
-	}
-
-	if p.lit == "drawRectangle" {
-		i++
-		if i == 7 {
-			println("her")
-		}
 	}
 
 	if p.tok == SYMBOL {
