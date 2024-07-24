@@ -1,9 +1,10 @@
 package main
 
 import (
-	"github.com/stretchr/testify/assert"
 	"os"
 	"testing"
+
+	"github.com/stretchr/testify/assert"
 )
 
 func TestParser_ParseFile(t *testing.T) {
@@ -85,6 +86,7 @@ func TestParser_ParseFile(t *testing.T) {
 			assert.NoError(t, err)
 
 			want, err := os.ReadFile(tt.fields.want)
+			assert.NoError(t, err)
 			assert.Equal(t, string(want), p.Out())
 		})
 	}

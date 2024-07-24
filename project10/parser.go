@@ -465,8 +465,6 @@ func (p *Parser) writeIndentation() {
 
 const template = "<%v> %v </%v>\r\n"
 
-var i = 0
-
 // writeTemplate writes KEYWORD, IDENT and SYMBOL token
 func (p *Parser) writeTemplate() {
 	if p.tok == EOF {

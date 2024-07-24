@@ -7,8 +7,8 @@ import (
 )
 
 func main() {
-	// os.Args = []string{"", "test/ExpressionLessSquare/Main.jack"}
-	// os.Args[1] = "test/ExpressionLessSquare/Main.jack"
+	os.Args = []string{"", "test/ExpressionLessSquare"}
+	os.Args[1] = "test/ExpressionLessSquare"
 	if len(os.Args) < 2 {
 		printErr("invalid number of arguments")
 	}
@@ -27,27 +27,38 @@ func main() {
 		printErr(err.Error())
 	}
 
+	isDir := false
 	if fileInfo.IsDir() {
+		isDir = true
 		jackFiles = getJackFiles(file.Name())
 	} else {
 		jackFiles = append(jackFiles, file.Name())
 	}
 
-	var parser Parser
 	for _, jack := range jackFiles {
-		src, err := os.ReadFile(jack)
+		var parser Parser
+		readFile := jack
+		if isDir {
+			readFile = os.Args[1] + "/" + jack
+		}
+		src, err := os.ReadFile(readFile)
 		if err != nil {
 			printErr(err.Error())
 		}
 		parser.Init(jack, src)
 		parser.ParseFile()
 
-		writeErr := os.WriteFile(jack+".xml", []byte(parser.Out()), 0644)
+		fileName := ""
+		if isDir {
+			fileName = os.Args[1] + "/" + jack[:strings.Index(jack, ".jack")]
+		} else {
+			fileName = os.Args[1][:strings.Index(os.Args[1], ".jack")]
+		}
+		writeErr := os.WriteFile(fileName+".xml", []byte(parser.Out()), 0644)
 		if writeErr != nil {
 			printErr(err.Error())
 		}
 	}
-
 }
 
 func printErr(err string) {
