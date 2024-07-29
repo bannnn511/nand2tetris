@@ -15,7 +15,7 @@ type Symbol struct {
 	name  string
 	sType Token
 	kind  VariableKind
-	n     uint32
+	index uint32
 }
 
 type SymbolTable struct {
@@ -43,17 +43,32 @@ func (sb *SymbolTable) Define(tok Token, name string, kind VariableKind) {
 		return
 	}
 
-	fmt.Println("here", count)
-
 	sb.m[name] = Symbol{
 		name:  name,
 		sType: tok,
 		kind:  kind,
-		n:     count,
+		index: count,
 	}
+	fmt.Println(sb.m[name].kind)
 	sb.count[kind] = count
 }
 
+// IndexOf returns count index variable name
 func (sb *SymbolTable) IndexOf(name string) uint32 {
-	return sb.m[name].n
+	return sb.m[name].index
+}
+
+// TypeOf returns Token type of variable name
+func (sb *SymbolTable) TypeOf(name string) Token {
+	return sb.m[name].sType
+}
+
+// KindOf returns variable kind
+func (sb *SymbolTable) KindOf(name string) VariableKind {
+	return sb.m[name].kind
+}
+
+// VarCount returns number of variable of the given kind
+func (sb *SymbolTable) VarCount(kind VariableKind) uint32 {
+	return sb.count[kind] + 1
 }

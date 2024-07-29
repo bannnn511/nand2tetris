@@ -8,7 +8,7 @@ import (
 	"github.com/stretchr/testify/assert"
 )
 
-func TestSymbolTable_Define(t *testing.T) {
+func TestSymbolTable(t *testing.T) {
 	type fields struct {
 		name      string
 		tok       pkg.Token
@@ -41,6 +41,8 @@ func TestSymbolTable_Define(t *testing.T) {
 	}
 
 	sb := pkg.NewSymbolTable()
+
+	count := uint32(0)
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
 			sb.Define(tt.fields.tok, tt.fields.name, tt.fields.kind)
@@ -50,7 +52,30 @@ func TestSymbolTable_Define(t *testing.T) {
 				t,
 				want,
 				got,
+				"IndexOf",
 			)
+
+			assert.Equal(
+				t,
+				sb.KindOf(tt.fields.name),
+				pkg.Var,
+				"KindOf",
+			)
+
+			assert.Equal(
+				t,
+				sb.TypeOf(tt.fields.name),
+				tt.fields.tok,
+				"TypeOf",
+			)
+
+			count++
 		})
+
+		assert.Equal(
+			t,
+			count,
+			sb.VarCount(pkg.Var),
+		)
 	}
 }
