@@ -38,7 +38,25 @@ func (w *VmWriter) WriteDo(
 	w.out.WriteString(do)
 
 	w.writeIndentation()
+
 	w.out.WriteString("pop temp 0\n")
+}
+
+func (w *VmWriter) WriteDoWithReturn(
+	fName string,
+	nVars int,
+	variableKind string,
+	index uint32,
+) {
+	w.writeIndentation()
+
+	do := fmt.Sprintf("call %v %d\n", fName, nVars)
+	w.out.WriteString(do)
+
+	w.writeIndentation()
+
+	popTo := fmt.Sprintf("pop %v %d\n", variableKind, index)
+	w.out.WriteString(popTo)
 }
 
 func (w *VmWriter) WriteReturn() {
@@ -46,7 +64,7 @@ func (w *VmWriter) WriteReturn() {
 	w.out.WriteString("push constant 0\n")
 
 	w.writeIndentation()
-	w.out.WriteString("return")
+	w.out.WriteString("return\n")
 }
 
 func (w *VmWriter) WriteOp(op string) {
