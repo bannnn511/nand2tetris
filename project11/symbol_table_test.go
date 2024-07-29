@@ -11,9 +11,10 @@ import (
 func TestSymbolTable(t *testing.T) {
 	type fields struct {
 		name      string
-		tok       pkg.Token
+		tok       string
 		kind      pkg.VariableKind
 		wantCount uint32
+		wantTok   pkg.Token
 	}
 
 	tests := []struct {
@@ -24,18 +25,20 @@ func TestSymbolTable(t *testing.T) {
 			"1. var int value",
 			fields{
 				name:      "value",
-				tok:       pkg.INT,
+				tok:       "int",
 				kind:      pkg.Var,
 				wantCount: 0,
+				wantTok:   pkg.INT,
 			},
 		},
 		{
 			"2. var int value2",
 			fields{
 				name:      "value2",
-				tok:       pkg.INT,
+				tok:       "int",
 				kind:      pkg.Var,
 				wantCount: 1,
+				wantTok:   pkg.INT,
 			},
 		},
 	}
@@ -65,7 +68,7 @@ func TestSymbolTable(t *testing.T) {
 			assert.Equal(
 				t,
 				sb.TypeOf(tt.fields.name),
-				tt.fields.tok,
+				tt.fields.wantTok,
 				"TypeOf",
 			)
 

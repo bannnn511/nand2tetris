@@ -7,6 +7,7 @@ import (
 )
 
 func main() {
+	os.Args = []string{"", "test/Seven/Main.jack"}
 	if len(os.Args) < 2 {
 		printErr("invalid number of arguments")
 	}
@@ -52,7 +53,7 @@ func main() {
 		} else {
 			fileName = os.Args[1][:strings.Index(os.Args[1], ".jack")]
 		}
-		writeErr := os.WriteFile(fileName+".xml", []byte(parser.Out()), 0644)
+		writeErr := os.WriteFile(fileName+".an", []byte(parser.VmOut()), 0644)
 		if writeErr != nil {
 			printErr(err.Error())
 		}

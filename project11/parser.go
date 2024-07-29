@@ -20,6 +20,8 @@ type Parser struct {
 	out         strings.Builder
 	classSB     *SymbolTable
 	routineSB   *SymbolTable
+	vmWriter    VmWriter
+	className   string
 
 	kind VariableKind
 }
@@ -30,20 +32,23 @@ func (p *Parser) Init(filename string, src []byte) {
 	p.tok = START
 	p.classSB = NewSymbolTable()
 	p.routineSB = NewSymbolTable()
+	p.vmWriter = *NewVmWriter()
 	p.elements = make([]Ast, 0, len(src))
 	p.append(Ast{START, ""})
 }
 
 func (p *Parser) ParseFile() {
 	p.next()
-	p.write("<class>\r\n")
 	p.indentation += 2
 
-	p.writeTemplate() //  class
+	//  class
 	p.next()
-	p.writeTemplate() // Main
+
+	// Main
+	p.className = p.lit
 	p.next()
-	p.writeTemplate() // {
+
+	// {
 	p.next()
 
 	for p.lit == "static" || p.lit == "field" {
@@ -59,21 +64,23 @@ func (p *Parser) ParseFile() {
 		p.compileSubroutine()
 	}
 
-	p.writeTemplate()
+	// }
+	// p.writeTemplate()
 	p.indentation -= 2
-	p.write("</class>\r\n")
 }
 
 func (p *Parser) compileSubroutine() {
-	p.writeWithIndentation("<subroutineDec>\r\n")
-	p.indentation += 2
-	p.writeTemplate() // kw
+	// construction, function, method
+	_, routineLit := p.getState()
 
 	p.next()
-	p.writeTemplate()
+	_, typeLit := p.getState()
 
 	p.next()
-	p.writeTemplate() // identifier
+	_, fName := p.getState()
+	fName = p.className + "." + fName
+
+	p.vmWriter.writeFunction(routineLit, fName, 0, typeLit)
 
 	p.next()
 	p.writeTemplate() // (
@@ -122,10 +129,8 @@ func (p *Parser) compileParameterList() {
 	p.writeWithIndentation("</parameterList>\r\n")
 }
 
+// <statements>
 func (p *Parser) compileStatements() {
-	p.writeWithIndentation("<statements>\r\n")
-	p.indentation += 2
-
 	for p.tok == KEYWORD && p.lit != "}" {
 		switch p.lit {
 		case "let":
@@ -140,16 +145,13 @@ func (p *Parser) compileStatements() {
 			p.compileReturn()
 		}
 	}
-
-	p.indentation -= 2
-	p.writeWithIndentation("</statements>\r\n")
 }
 
+// <returnStatement>
 func (p *Parser) compileReturn() {
-	p.writeWithIndentation("<returnStatement>\r\n")
-	p.indentation += 2
-
-	p.writeTemplate()
+	p.vmWriter.IncrIndent()
+	// return
+	p.vmWriter.WriteReturn()
 
 	p.next()
 	if p.tok != SYMBOL && p.lit != ";" {
@@ -157,40 +159,46 @@ func (p *Parser) compileReturn() {
 	}
 
 	p.writeTemplate()
+	p.vmWriter.DecrIndent()
 
-	p.indentation -= 2
-	p.writeWithIndentation("</returnStatement>\r\n")
 	p.next()
 }
 
 // 'do' subroutineCall ';'
 func (p *Parser) compileDo() {
+	p.vmWriter.IncrIndent()
 	p.writeWithIndentation("<doStatement>\r\n")
 	p.indentation += 2
 
-	p.writeTemplate() // do
-	p.next()
+	// state: do
 
+	p.next()
+	fName := p.lit
 	p.writeTemplate() // identifier
 	p.next()
 	if p.lit == "." {
-		p.writeTemplate() // symbol
+		// .
+		fName += p.lit
 		p.next()
-		p.writeTemplate() // identifier
+
+		// identifier
+		fName += p.lit
 		p.next()
 	}
 
-	p.writeTemplate() // symbol
+	// (
 	p.next()
 
-	p.compileExpressionList()
+	nVars := p.compileExpressionList()
 
-	p.writeTemplate() // symbol
+	// )
 
 	p.next()
-	p.writeTemplate() // symbol
 
-	p.indentation -= 2
+	// ;
+	p.vmWriter.WriteDo(fName, nVars)
+
+	p.vmWriter.DecrIndent()
 	p.writeWithIndentation("</doStatement>\r\n")
 	p.next()
 }
@@ -377,31 +385,109 @@ func (p *Parser) CompileTerm() {
 	p.writeWithIndentation("</term>\r\n")
 }
 
-func (p *Parser) compileExpressionList() {
-	p.writeWithIndentation("<expressionList>\r\n")
-	p.indentation += 2
+// term(op term)*
+func (p *Parser) compileExpressions2() {
+	p.compileTerm2() // term
+	for p.tok == SYMBOL && IsOp(p.lit) {
+		// op
+		op := p.lit
+		p.next()
+
+		// term
+		p.compileTerm2()
+
+		// op
+		p.vmWriter.writeIndentation()
+		p.vmWriter.WriteOp(op)
+	}
+
+}
+
+func (p *Parser) compileTerm2() {
+	switch p.tok {
+	case INT:
+		p.vmWriter.writeIndentation()
+		p.vmWriter.write(fmt.Sprintf("push constant %v\n", p.lit))
+		p.next()
+	case CHAR:
+		p.writeTemplate()
+		p.next()
+	case KEYWORD:
+		p.writeTemplate()
+		p.next()
+	case IDENT:
+		p.writeTemplate()
+		p.next()
+		if p.lit == "[" {
+			p.writeTemplate()
+			p.next()
+			p.compileExpressions2()
+			p.writeTemplate()
+			p.next()
+		} else if p.lit == "." {
+			p.writeTemplate() // symbol
+			p.next()
+			p.writeTemplate() // identifier
+			p.next()
+			p.writeTemplate() // symbol
+			p.next()
+			p.compileExpressionList()
+			p.writeTemplate() // symbol
+			p.next()
+		} else if p.lit == "(" {
+			p.writeTemplate() // symbol
+			p.compileExpressionList()
+			p.next()
+			p.writeTemplate() // symbol
+			p.next()
+		}
+		// else if p.lit == "~" || p.lit == "-" {
+		//	p.writeTemplate() // symbol
+		//	p.next()
+		//	p.CompileTerm()
+		// }
+	case SYMBOL:
+		if p.lit == "(" {
+			p.writeTemplate() // symbol
+			p.next()
+			p.compileExpressions2()
+			p.writeTemplate() // symbol
+			p.next()
+		} else if p.lit == "~" || p.lit == "-" {
+			p.writeTemplate() // symbol
+			p.next()
+			p.compileTerm2()
+		}
+	default:
+	}
+}
+
+// <expressionList>
+func (p *Parser) compileExpressionList() int {
+	count := 0
 
 	if p.tok != SYMBOL && p.lit != ")" {
-		p.compileExpressions()
+		count++
+		p.compileExpressions2()
 		for p.tok == SYMBOL && p.lit == "," {
 			p.writeTemplate() // symbol
 			p.next()
-			p.compileExpressions()
+			p.compileExpressions2()
 		}
 	}
 
 	// if after '(' is a '(' -> new expression
 	if p.lit == "(" {
-		p.compileExpressions()
+		p.compileExpressions2()
 		for p.tok == SYMBOL && p.lit == "," {
+			fmt.Println("4")
 			p.writeTemplate() // symbol
 			p.next()
-			p.compileExpressions()
+			p.compileExpressions2()
 		}
 	}
 
-	p.indentation -= 2
-	p.writeWithIndentation("</expressionList>\r\n")
+	return count
 }
 
 type VariableScope int
@@ -432,42 +518,43 @@ func (p *Parser) compileVarDec() {
 func (p *Parser) compileTypeAndVarName(scope VariableScope) {
 	vType := p.lit
 	// variable type
-	p.writeTemplate()
+	// p.writeTemplate()
 	p.next()
 
-	// variable identifier
 	name := p.lit
-	p.writeTemplate()
+	// variable identifier
+	// p.writeTemplate()
 	p.next()
 
 	p.defineVariable(scope, name, vType, p.kind)
 
 	for p.lit == "," {
-		p.writeTemplate() // ',''
+		// p.writeTemplate() // ',''
 		p.next()
 
 		name := p.lit
 		p.defineVariable(scope, name, vType, p.kind)
-		p.writeTemplate() // variable identifier
+		// p.writeTemplate() // variable identifier
 		p.next()
 	}
 
-	p.writeTemplate()
+	// p.writeTemplate()
 	p.next()
 }
 
 func (p *Parser) compileClassVarDec() {
-	p.writeWithIndentation("<classVarDec>\r\n")
-	p.indentation += 2
+	// p.writeWithIndentation("<classVarDec>\r\n")
+	// p.indentation += 2
 
 	p.kind = WhichKind(p.lit)
-	p.writeTemplate()
+	// var
+	// p.writeTemplate()
 	p.next()
 
 	p.compileTypeAndVarName(Class)
 
-	p.indentation -= 2
-	p.writeWithIndentation("</classVarDec>\r\n")
+	// p.indentation -= 2
+	// p.writeWithIndentation("</classVarDec>\r\n")
 }
 
 func (p *Parser) append(ele Ast) {
@@ -549,6 +636,10 @@ func (p *Parser) Out() string {
 	return p.out.String()
 }
 
+func (p *Parser) VmOut() string {
+	return p.vmWriter.Out()
+}
+
 func (p *Parser) defineVariable(
 	scope VariableScope,
 	name string,
@@ -561,4 +652,8 @@ func (p *Parser) defineVariable(
 	case Subroutine:
 		p.routineSB.Define(vType, name, kind)
 	}
+}
+
+func (p *Parser) getState() (Token, string) {
+	return p.tok, p.lit
 }

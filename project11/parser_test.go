@@ -20,43 +20,11 @@ func TestParser_ParseFile(t *testing.T) {
 		fields fields
 	}{
 		{
-			"1. ExpressionLessSquare Main.jack",
+			"1. Seven Main.jack",
 			fields{
-				dest: "./test/ExpressionLessSquare/Main.jack",
-				want: "./test/ExpressionLessSquare/Main.xml",
-				out:  "./test/ExpressionLessSquare/Main.test.xml",
-			},
-		},
-		{
-			"2. ExpressionLessSquare Square.jack",
-			fields{
-				dest: "./test/ExpressionLessSquare/Square.jack",
-				want: "./test/ExpressionLessSquare/Square.xml",
-				out:  "./test/ExpressionLessSquare/Square.test.xml",
-			},
-		},
-		{
-			"3. ExpressionLessSquare SquareGame.jack",
-			fields{
-				dest: "./test/ExpressionLessSquare/SquareGame.jack",
-				want: "./test/ExpressionLessSquare/SquareGame.xml",
-				out:  "./test/ExpressionLessSquare/SquareGame.test.xml",
-			},
-		},
-		{
-			"4. ArrayTest Main.jack",
-			fields{
-				dest: "./test/ArrayTest/Main.jack",
-				want: "./test/ArrayTest/Main.xml",
-				out:  "./test/ArrayTest/Main.test.xml",
-			},
-		},
-		{
-			"7. Square SquareGame.jack",
-			fields{
-				dest: "./test/Square/SquareGame.jack",
-				want: "./test/Square/SquareGame.xml",
-				out:  "./test/Square/SquareGame.test.xml",
+				dest: "./test/Seven/Main.jack",
+				want: "./test/Seven/Main.vm",
+				out:  "./test/Seven/Main.an",
 			},
 		},
 	}
@@ -68,12 +36,12 @@ func TestParser_ParseFile(t *testing.T) {
 			p.Init("", src)
 			p.ParseFile()
 
-			err = os.WriteFile(tt.fields.out, []byte(p.Out()), 0644)
+			err = os.WriteFile(tt.fields.out, []byte(p.VmOut()), 0644)
 			assert.NoError(t, err)
 
 			want, err := os.ReadFile(tt.fields.want)
 			assert.NoError(t, err)
-			assert.Equal(t, string(want), p.Out())
+			assert.Equal(t, string(want), p.VmOut())
 		})
 	}
 }
