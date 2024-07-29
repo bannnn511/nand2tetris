@@ -66,6 +66,7 @@ const (
 	op_end
 
 	START // only for printting first line of xml
+	USR   // user define type
 )
 
 var tokens = [...]string{
@@ -161,6 +162,13 @@ func Lookup(ident string) Token {
 	return IDENT
 }
 
+func Lookup2(ident string) Token {
+	if k, ok := keywords[ident]; ok {
+		return k
+	}
+
+	return USR
+}
 func IsSymbol(v string) bool {
 	_, ok := symbols[v]
 	return ok

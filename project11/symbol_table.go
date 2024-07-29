@@ -5,7 +5,8 @@ import "fmt"
 type VariableKind int
 
 const (
-	Static VariableKind = iota
+	Undefined VariableKind = iota
+	Static
 	Field
 	Arg
 	Var
@@ -13,7 +14,8 @@ const (
 
 type Symbol struct {
 	name  string
-	sType Token
+	sType Token  // primitive token
+	uType string // user defined type
 	kind  VariableKind
 	index uint32
 }
@@ -30,7 +32,11 @@ func NewSymbolTable() *SymbolTable {
 	}
 }
 
-func (sb *SymbolTable) Define(tok Token, name string, kind VariableKind) {
+func (sb *SymbolTable) Define(
+	tok string,
+	name string,
+	kind VariableKind,
+) {
 	count, ok := sb.count[kind]
 	if !ok {
 		sb.count[kind] = 0
@@ -43,13 +49,15 @@ func (sb *SymbolTable) Define(tok Token, name string, kind VariableKind) {
 		return
 	}
 
+	token := Lookup2(tok)
+
 	sb.m[name] = Symbol{
 		name:  name,
-		sType: tok,
+		sType: token,
+		uType: tok,
 		kind:  kind,
 		index: count,
 	}
-	fmt.Println(sb.m[name].kind)
 	sb.count[kind] = count
 }
 
@@ -71,4 +79,61 @@ func (sb *SymbolTable) KindOf(name string) VariableKind {
 // VarCount returns number of variable of the given kind
 func (sb *SymbolTable) VarCount(kind VariableKind) uint32 {
 	return sb.count[kind] + 1
+}
+
+func (sb *SymbolTable) Print() {
+	fmt.Printf("%-10s", "name")
+	fmt.Printf("%-10s", "type")
+	fmt.Printf("%-10s", "kind")
+	fmt.Printf("%-10s\n", "index")
+	fmt.Println("-----------------------------------")
+
+	for _, v := range sb.m {
+		vType := v.sType.String()
+		if v.sType == USR {
+			vType = v.uType
+		}
+		fmt.Printf("%-10s", v.name)
+		fmt.Printf("%-10s", vType)
+		fmt.Printf("%-10v", v.kind)
+		fmt.Printf("%-10d\n", v.index)
+	}
+
+	fmt.Println()
+	fmt.Println()
+}
+
+func (v VariableKind) String() string {
+	switch v {
+	case Static:
+		return "static"
+	case Field:
+		return "field"
+	case Var:
+		return "local"
+	case Arg:
+		return "argument"
+	}
+
+	return ""
+}
+
+func WhichKind(str string) VariableKind {
+	if str == "field" {
+		return Field
+	}
+
+	if str == "static" {
+		return Static
+	}
+
+	if str == "var" {
+		return Var
+	}
+
+	if str == "argument" {
+		return Arg
+	}
+
+	return Undefined
 }

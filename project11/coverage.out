@@ -175,8 +175,11 @@ project11/symbol_table.go:35.9,37.3 1 1
 project11/symbol_table.go:37.8,39.3 1 1
 project11/symbol_table.go:41.2,42.8 2 1
 project11/symbol_table.go:42.8,44.3 1 0
-project11/symbol_table.go:46.2,54.24 3 1
+project11/symbol_table.go:46.2,53.24 3 1
 project11/symbol_table.go:57.52,59.2 1 1
+project11/symbol_table.go:62.50,64.2 1 1
+project11/symbol_table.go:67.57,69.2 1 1
+project11/symbol_table.go:72.59,74.2 1 1
 project11/token.go:123.34,125.42 2 1
 project11/token.go:125.42,127.3 1 1
 project11/token.go:128.2,128.13 1 1
