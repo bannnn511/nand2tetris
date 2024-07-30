@@ -27,6 +27,15 @@ label L0
     push local 0
     call Main.nextMask 1
     pop local 0
+push local 1
+push constant 16
+>
+~
+push local 0
+&
+push constant 0
+=
+~
     push constant 8000
     push local 1
     add
@@ -44,12 +53,17 @@ label L0
 label L1
     push constant 0
     return
-function Main.nextMask 1
+function Main.nextMask 0
+push constant 0
+=
     push constant 0
     return
+    push constant 1
     push constant 0
     return
-function Main.fillMemory 1
+    push constant 2
+    call Math.multiply 2
+function Main.fillMemory 0
 label L2
     push constant 0
     >

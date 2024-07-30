@@ -86,7 +86,12 @@ func (sb *SymbolTable) GetSegment(name string) (VariableKind, uint) {
 
 // VarCount returns number of variable of the given kind
 func (sb *SymbolTable) VarCount(kind VariableKind) uint {
-	return sb.count[kind] + 1
+	v, ok := sb.count[kind]
+	if !ok {
+		return 0
+	}
+
+	return v + 1
 }
 
 func (sb *SymbolTable) IsExists(name string) bool {

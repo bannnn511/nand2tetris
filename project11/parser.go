@@ -144,7 +144,7 @@ func (p *Parser) compileReturn() {
 
 	p.next()
 	if p.tok != SYMBOL && p.lit != ";" {
-		p.compileExpressions()
+		p.compileExpressions2()
 	}
 
 	p.writeTemplate()
@@ -200,7 +200,7 @@ func (p *Parser) compileIf() {
 	p.writeTemplate() // (
 
 	p.next()
-	p.compileExpressions()
+	p.compileExpressions2()
 
 	p.writeTemplate() // )
 
@@ -245,7 +245,7 @@ func (p *Parser) compileLet() {
 	if p.lit == "[" {
 		p.writeTemplate() // [
 		p.next()
-		p.compileExpressions()
+		p.compileExpressions2()
 		p.writeTemplate() // ]
 		p.next()
 	}
@@ -289,19 +289,7 @@ func (p *Parser) compileWhile() {
 	p.next()
 }
 
-func (p *Parser) compileExpressions() {
-
-	p.CompileTerm()
-	for p.tok == SYMBOL && IsOp(p.lit) {
-		p.writeTemplate()
-		p.next()
-		p.CompileTerm()
-	}
-
-}
-
 func (p *Parser) CompileTerm() {
-
 	switch p.tok {
 	case INT:
 		p.writeTemplate()
@@ -318,7 +306,7 @@ func (p *Parser) CompileTerm() {
 		if p.lit == "[" {
 			p.writeTemplate()
 			p.next()
-			p.compileExpressions()
+			p.compileExpressions2()
 			p.writeTemplate()
 			p.next()
 		} else if p.lit == "." {
@@ -347,7 +335,7 @@ func (p *Parser) CompileTerm() {
 		if p.lit == "(" {
 			p.writeTemplate() // symbol
 			p.next()
-			p.compileExpressions()
+			p.compileExpressions2()
 			p.writeTemplate() // symbol
 			p.next()
 		} else if p.lit == "~" || p.lit == "-" {
@@ -378,6 +366,9 @@ func (p *Parser) compileExpressions2() {
 }
 
 func (p *Parser) shouldPushToVariable(name string) {
+	if name == "" {
+		return
+	}
 	if p.classSB.IsExists(name) {
 		kind, idx := p.classSB.GetSegment(name)
 		p.vmWriter.WritePushVariableToStack(kind, idx)
@@ -427,6 +418,7 @@ func (p *Parser) compileTerm2() {
 		// state: identifier
 		identifier := p.lit
 		p.shouldPushToVariable(identifier)
+		p.lit = ""
 
 		p.next()
 		if p.lit == "[" {
