@@ -20,61 +20,85 @@ function Main.convert 3
 label L0
     push local 2
     not
-    if go-to L1
+    if-goto L1
     push local 1
     push constant 1
     add
+    pop local 1
     push local 0
     call Main.nextMask 1
     pop local 0
-push local 1
-push constant 16
->
-~
-push local 0
-&
-push constant 0
-=
-~
+    push local 1
+    push constant 16
+    gt
+    not
+    not
+    if-goto L3
+    push argument 0
+    push local 0
+    and
+    push constant 0
+    eq
+    not
+    not
+    if-goto L5
     push constant 8000
     push local 1
     add
     push constant 1
     call Memory.poke 2
     pop temp 0
+label L6
     push constant 8000
     push local 1
     add
     push constant 0
     call Memory.poke 2
     pop temp 0
+label L6
     push constant 1
     pop local 2
-label L1
+goto L6
+label label L2
+
     push constant 0
     return
 function Main.nextMask 0
-push constant 0
-=
+    push argument 0
+    push constant 0
+    eq
+    not
+    if-goto L7
     push constant 0
     return
     push constant 1
+label L8
     push constant 0
     return
+    push argument 0
     push constant 2
     call Math.multiply 2
 function Main.fillMemory 0
-label L2
+label L8
+    push argument 1
     push constant 0
-    >
+    gt
     not
-    if go-to L3
+    if-goto L9
+    push argument 0
+    push argument 2
     call Memory.poke 2
     pop temp 0
+    push argument 1
     push constant 1
     neg
+    pop argument 1
+    push argument 0
     push constant 1
     add
-label L3
+    pop argument 0
+goto L10
+label label L10
+
     push constant 0
     return

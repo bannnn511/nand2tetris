@@ -72,6 +72,18 @@ func (w *VmWriter) WritePopVariable(segment VariableKind, idx uint) {
 	w.out.WriteString(pop)
 }
 
+func (w *VmWriter) WriteIf(label string) {
+	w.WriteIndentation()
+	w.Write("not\n")
+	w.WriteIndentation()
+	w.Write(fmt.Sprintf("if-goto %v\n", label))
+}
+
+func (w *VmWriter) WriteGoto(label string) {
+	w.WriteIndentation()
+	w.Write(fmt.Sprintf("goto %v\n", label))
+}
+
 func (w *VmWriter) WriteReturn() {
 	w.WriteIndentation()
 	w.out.WriteString("push constant 0\n")
@@ -90,19 +102,34 @@ func (w *VmWriter) WriteOp(op string) {
 	case "-":
 		w.Write("neg\n")
 	case "<":
+		w.Write("lt\n")
+	case ">":
+		w.Write("gt\n")
+	case "~":
+		w.Write("not\n")
+	case "=":
+		w.Write("eq\n")
+	case "&":
+		w.Write("and\n")
 	default:
 		w.Write(op + "\n")
 	}
 }
 
-func (w *VmWriter) WriteLabel() {
-	label := fmt.Sprintf("L%d", labelCount)
+func (w *VmWriter) WriteLabel(label string) {
 	w.out.WriteString(fmt.Sprintf("label %v\n", label))
+}
+
+func (w *VmWriter) IncrLabel() {
 	labelCount++
 }
 
-func (w *VmWriter) GetNextLabel() int {
+func (w *VmWriter) GetLabelIdx() int {
 	return labelCount
+}
+
+func (w *VmWriter) GetLabel() string {
+	return fmt.Sprintf("L%d", labelCount)
 }
 
 func (w *VmWriter) WriteFalse() {
@@ -116,24 +143,6 @@ func (w *VmWriter) WriteTrue() {
 	w.WriteIndentation()
 	w.Write("neg\n")
 }
-
-// func (w *VmWriter) WriteOp(op string) {
-// 	var symbol string
-// 	switch op {
-// 	case "<":
-// 		symbol = "&lt;"
-// 	case ">":
-// 		symbol = "&gt;"
-// 	case "&":
-// 		symbol = "&amp;"
-// 	case "-":
-// 		symbol = "neg"
-// 	default:
-// 		symbol = op
-// 	}
-
-// 	w.out.WriteString(symbol)
-// }
 
 func (w *VmWriter) Write(str string) {
 	w.out.WriteString(str)

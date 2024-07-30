@@ -11,9 +11,10 @@ type Ast struct {
 }
 
 type Parser struct {
-	elements []Ast   // list of lexical elements
-	tok      Token   // current token
-	lit      string  // current value
+	elements []Ast  // list of lexical elements
+	tok      Token  // current token
+	lit      string // current value
+	prev     string
 	scanner  Scanner // token scanner
 
 	classSB   *SymbolTable // class variable
@@ -102,20 +103,18 @@ func (p *Parser) compileSubroutine() {
 }
 
 func (p *Parser) compileParameterList() {
-
 	for p.tok != SYMBOL {
-		p.writeTemplate()
+		// p.writeTemplate()
 		p.next()
 
+		p.defineVariable(Subroutine, p.lit, p.prev, Arg)
 		p.writeTemplate()
 		p.next()
-
 		if p.lit == "," {
 			p.writeTemplate()
 			p.next()
 		}
 	}
-
 }
 
 // <statements>
@@ -193,30 +192,34 @@ func (p *Parser) compileDo() {
 
 // 'if' '(' expression ')' '{' statements '}' ( 'else' '{' statements '}' )?
 func (p *Parser) compileIf() {
+	p.vmWriter.IncrIndent()
 
-	p.writeTemplate() // if
-
+	// state:if
 	p.next()
-	p.writeTemplate() // (
+	// state: '('
 
 	p.next()
 	p.compileExpressions2()
+	p.vmWriter.IncrLabel()
+	p.vmWriter.WriteIf(p.vmWriter.GetLabel())
+	p.vmWriter.IncrLabel()
+	p.vmWriter.DecrIndent()
 
-	p.writeTemplate() // )
-
+	// ')'
 	p.next()
-	p.writeTemplate() // {
-
+	// '{'
 	p.next()
+	p.vmWriter.WriteIndentation()
 	p.compileStatements()
-	p.writeTemplate() // }
+	// '}'
 
 	p.next()
 	if p.tok == KEYWORD && p.lit == "else" {
-		p.writeTemplate() // else
-
+		p.vmWriter.WriteIndentation()
+		p.vmWriter.WriteLabel(p.vmWriter.GetLabel())
+		// state: else
 		p.next()
-		p.writeTemplate() // {
+		// '{'
 		p.next()
 
 		// if else body is empty -> dont call next
@@ -226,10 +229,9 @@ func (p *Parser) compileIf() {
 			p.next()
 		}
 
-		p.writeTemplate() // }
+		// '}'
 		p.next()
 	}
-
 }
 
 // <letStatement>
@@ -254,6 +256,8 @@ func (p *Parser) compileLet() {
 	p.next()
 	p.compileExpressions2()
 	// state: ;
+	p.shouldPopToVariable(p.variableName)
+	p.variableName = ""
 
 	p.vmWriter.DecrIndent()
 	p.next()
@@ -263,7 +267,9 @@ func (p *Parser) compileLet() {
 func (p *Parser) compileWhile() {
 	p.vmWriter.IncrIndent()
 	// state: while
-	p.vmWriter.WriteLabel()
+	p.vmWriter.WriteLabel(p.vmWriter.GetLabel())
+	p.vmWriter.IncrLabel()
+	currentLabel := p.vmWriter.GetLabelIdx()
 
 	p.next()
 	// state: '('
@@ -271,18 +277,19 @@ func (p *Parser) compileWhile() {
 	p.compileExpressions2()
 	// state: ')'
 
-	p.vmWriter.WriteIndentation()
-	p.vmWriter.Write("not\n")
-	p.vmWriter.WriteIndentation()
-	p.vmWriter.Write(fmt.Sprintf("if go-to L%d\n", p.vmWriter.GetNextLabel()))
+	p.vmWriter.WriteIf(p.vmWriter.GetLabel())
+	p.vmWriter.IncrLabel()
 	p.vmWriter.DecrIndent()
-
 	p.next()
 	// state: {
-
 	p.next()
 	p.compileStatements()
-	p.vmWriter.WriteLabel()
+
+	p.vmWriter.WriteGoto(p.vmWriter.GetLabel())
+
+	currentLabel++
+	l2Lable := fmt.Sprintf("label L%v\n", currentLabel)
+	p.vmWriter.WriteLabel(l2Lable)
 
 	// state: '}'
 
@@ -362,7 +369,6 @@ func (p *Parser) compileExpressions2() {
 		// op
 		p.vmWriter.WriteOp(op)
 	}
-
 }
 
 func (p *Parser) shouldPushToVariable(name string) {
@@ -446,6 +452,7 @@ func (p *Parser) compileTerm2() {
 				vKind := p.routineSB.KindOf(p.variableName)
 				index := p.routineSB.IndexOf(p.variableName)
 				p.vmWriter.WriteDoWithReturn(fName, nVars, vKind.String(), index)
+				p.variableName = ""
 			}
 
 			// state: symbol
@@ -515,36 +522,29 @@ const (
 )
 
 func (p *Parser) compileVarDec() {
-
-	// subroutine symbol table must be reconstruct for each subroutine
-
 	p.kind = Var
-	p.writeTemplate()
+	// p.writeTemplate()
 	p.next()
 	p.compileTypeAndVarName(Subroutine)
-
 }
 
 func (p *Parser) compileTypeAndVarName(scope VariableScope) {
 	vType := p.lit
-	// variable type
-	// p.writeTemplate()
+	// state: variable type
 	p.next()
 
 	name := p.lit
-	// variable identifier
-	// p.writeTemplate()
+	// state: variable identifier
 	p.next()
-
 	p.defineVariable(scope, name, vType, p.kind)
-
 	for p.lit == "," {
-		// p.writeTemplate() // ',''
+		// state ','
 		p.next()
 
 		name := p.lit
 		p.defineVariable(scope, name, vType, p.kind)
-		// p.writeTemplate() // variable identifier
+
+		// state: variable identifier
 		p.next()
 	}
 
@@ -553,17 +553,11 @@ func (p *Parser) compileTypeAndVarName(scope VariableScope) {
 }
 
 func (p *Parser) compileClassVarDec() {
-	// p.writeWithIndentation("<classVarDec>\r\n")
-
 	p.kind = WhichKind(p.lit)
 	// var
 	// p.writeTemplate()
 	p.next()
-
 	p.compileTypeAndVarName(Class)
-
-	//
-	// p.writeWithIndentation("</classVarDec>\r\n")
 }
 
 func (p *Parser) append(ele Ast) {
@@ -577,6 +571,7 @@ func (p *Parser) next() {
 		return
 	}
 	p.tok = tok
+	p.prev = p.lit
 	p.lit = lit
 	p.elements = append(p.elements, Ast{tok, lit})
 }
