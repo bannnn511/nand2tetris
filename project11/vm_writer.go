@@ -68,15 +68,37 @@ func (w *VmWriter) WriteReturn() {
 }
 
 func (w *VmWriter) WriteOp(op string) {
+	w.writeIndentation()
 	switch op {
 	case "*":
 		w.write("call Math.multiply 2\n")
 	case "+":
 		w.write("add\n")
+	case "-":
+		w.write("neg\n")
+	case "<":
 	default:
 		w.write(op + "\n")
 	}
 }
+
+// func (w *VmWriter) WriteOp(op string) {
+// 	var symbol string
+// 	switch op {
+// 	case "<":
+// 		symbol = "&lt;"
+// 	case ">":
+// 		symbol = "&gt;"
+// 	case "&":
+// 		symbol = "&amp;"
+// 	case "-":
+// 		symbol = "neg"
+// 	default:
+// 		symbol = op
+// 	}
+
+// 	w.out.WriteString(symbol)
+// }
 
 func (w *VmWriter) write(str string) {
 	w.out.WriteString(str)

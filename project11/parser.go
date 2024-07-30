@@ -360,7 +360,6 @@ func (p *Parser) compileExpressions2() {
 		p.compileTerm2()
 
 		// op
-		p.vmWriter.writeIndentation()
 		p.vmWriter.WriteOp(op)
 	}
 
@@ -431,9 +430,10 @@ func (p *Parser) compileTerm2() {
 			p.writeTemplate() // symbol
 			p.next()
 		} else if p.lit == "~" || p.lit == "-" {
-			p.writeTemplate() // symbol
+			op := p.lit
 			p.next()
 			p.compileTerm2()
+			p.vmWriter.WriteOp(op)
 		}
 	default:
 	}
@@ -551,7 +551,7 @@ func (p *Parser) writeTemplate() {
 	}
 
 	if p.tok == SYMBOL {
-		p.writeSymbol()
+		// p.writeSymbol()
 		return
 	}
 
@@ -566,22 +566,6 @@ func (p *Parser) writeTemplate() {
 	}
 
 	// p.write(fmt.Sprintf(template, p.tok, p.lit, p.tok))
-}
-
-func (p *Parser) writeSymbol() {
-	// var symbol string
-	// switch p.lit {
-	// case "<":
-	// 	symbol = "&lt;"
-	// case ">":
-	// 	symbol = "&gt;"
-	// case "&":
-	// 	symbol = "&amp;"
-	// default:
-	// 	symbol = p.lit
-	// }
-
-	// p.write("<symbol> " + symbol + " </symbol>\r\n")
 }
 
 func (p *Parser) VmOut() string {
