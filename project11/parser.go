@@ -204,13 +204,12 @@ func (p *Parser) compileIf() {
 	p.next()
 	p.compileExpressions2()
 
+	l1 := p.vmWriter.GetLabelIdx()
 	p.vmWriter.IncrLabel()
-	l1Index := p.vmWriter.GetLabelIdx() // L1
-	p.vmWriter.IncrLabel()
-	l2Index := p.vmWriter.GetLabelIdx()
-	p.gotoStack = append(p.gotoStack, l2Index)
+	l2 := p.vmWriter.GetLabelIdx()
+	p.gotoStack = append(p.gotoStack, l1)
 
-	p.vmWriter.WriteIf(l1Index)
+	p.vmWriter.WriteIf(l2)
 	p.vmWriter.DecrIndent()
 
 	// ')'
@@ -226,7 +225,6 @@ func (p *Parser) compileIf() {
 		p.gotoStack = p.gotoStack[1:]
 
 		p.vmWriter.IncrIndent()
-		p.vmWriter.WriteIndentation()
 		p.vmWriter.WriteGoto(l2Index)
 		p.vmWriter.DecrIndent()
 	}
@@ -234,7 +232,7 @@ func (p *Parser) compileIf() {
 	p.next()
 	if p.tok == KEYWORD && p.lit == "else" {
 		p.vmWriter.WriteIndentation()
-		p.vmWriter.WriteLabel(l2Index)
+		p.vmWriter.WriteLabel(l2)
 
 		// state: else
 		p.next()
@@ -251,6 +249,7 @@ func (p *Parser) compileIf() {
 		// '}'
 		p.next()
 	}
+	p.vmWriter.WriteLabel(l1)
 }
 
 // <letStatement>

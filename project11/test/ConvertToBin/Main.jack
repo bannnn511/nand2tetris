@@ -42,13 +42,12 @@ class Main {
     	    let position = position + 1;
     	    let mask = Main.nextMask(mask);
 
-    //	    if (~(position > 16)) {
-
-    //	        if (~((value & mask) = 0)) {
-    // 	            do Memory.poke(8000 + position, 1);
-    //   	        }
-    //	        else {
-    //	            do Memory.poke(8000 + position, 0);
+    	    if (~(position > 16)) {
+    	        if (~((value & mask) = 0)) {
+     	            do Memory.poke(8000 + position, 1);
+       	        }
+                else {
+                    do Memory.poke(8000 + position, 0);
       	        }
     	    }
     	    else {
