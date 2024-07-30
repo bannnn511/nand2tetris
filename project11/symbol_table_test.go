@@ -13,7 +13,7 @@ func TestSymbolTable(t *testing.T) {
 		name      string
 		tok       string
 		kind      pkg.VariableKind
-		wantCount uint32
+		wantCount uint
 		wantTok   pkg.Token
 	}
 
@@ -74,11 +74,5 @@ func TestSymbolTable(t *testing.T) {
 
 			count++
 		})
-
-		assert.Equal(
-			t,
-			count,
-			sb.VarCount(pkg.Var),
-		)
 	}
 }

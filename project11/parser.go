@@ -25,6 +25,7 @@ type Parser struct {
 	className    string
 	kind         VariableKind
 	variableName string
+	gotoStack    []int
 }
 
 func (p *Parser) Init(filename string, src []byte) {
@@ -190,6 +191,8 @@ func (p *Parser) compileDo() {
 	p.next()
 }
 
+var ifCount = 0
+
 // 'if' '(' expression ')' '{' statements '}' ( 'else' '{' statements '}' )?
 func (p *Parser) compileIf() {
 	p.vmWriter.IncrIndent()
@@ -200,23 +203,39 @@ func (p *Parser) compileIf() {
 
 	p.next()
 	p.compileExpressions2()
+
 	p.vmWriter.IncrLabel()
-	p.vmWriter.WriteIf(p.vmWriter.GetLabel())
+	l1Index := p.vmWriter.GetLabelIdx() // L1
 	p.vmWriter.IncrLabel()
+	l2Index := p.vmWriter.GetLabelIdx()
+	p.gotoStack = append(p.gotoStack, l2Index)
+
+	p.vmWriter.WriteIf(l1Index)
 	p.vmWriter.DecrIndent()
 
 	// ')'
 	p.next()
 	// '{'
 	p.next()
-	p.vmWriter.WriteIndentation()
 	p.compileStatements()
 	// '}'
+
+	if len(p.gotoStack) > 0 {
+		// write label
+		l2Index := p.gotoStack[0]
+		p.gotoStack = p.gotoStack[1:]
+
+		p.vmWriter.IncrIndent()
+		p.vmWriter.WriteIndentation()
+		p.vmWriter.WriteGoto(l2Index)
+		p.vmWriter.DecrIndent()
+	}
 
 	p.next()
 	if p.tok == KEYWORD && p.lit == "else" {
 		p.vmWriter.WriteIndentation()
-		p.vmWriter.WriteLabel(p.vmWriter.GetLabel())
+		p.vmWriter.WriteLabel(l2Index)
+
 		// state: else
 		p.next()
 		// '{'
@@ -267,9 +286,11 @@ func (p *Parser) compileLet() {
 func (p *Parser) compileWhile() {
 	p.vmWriter.IncrIndent()
 	// state: while
-	p.vmWriter.WriteLabel(p.vmWriter.GetLabel())
+
+	l1 := p.vmWriter.GetLabelIdx()
+	p.vmWriter.WriteLabel(l1)
 	p.vmWriter.IncrLabel()
-	currentLabel := p.vmWriter.GetLabelIdx()
+	l2 := p.vmWriter.GetLabelIdx()
 
 	p.next()
 	// state: '('
@@ -277,7 +298,7 @@ func (p *Parser) compileWhile() {
 	p.compileExpressions2()
 	// state: ')'
 
-	p.vmWriter.WriteIf(p.vmWriter.GetLabel())
+	p.vmWriter.WriteIf(l2)
 	p.vmWriter.IncrLabel()
 	p.vmWriter.DecrIndent()
 	p.next()
@@ -285,11 +306,10 @@ func (p *Parser) compileWhile() {
 	p.next()
 	p.compileStatements()
 
-	p.vmWriter.WriteGoto(p.vmWriter.GetLabel())
-
-	currentLabel++
-	l2Lable := fmt.Sprintf("label L%v\n", currentLabel)
-	p.vmWriter.WriteLabel(l2Lable)
+	p.vmWriter.IncrIndent()
+	p.vmWriter.WriteGoto(l1)
+	p.vmWriter.DecrIndent()
+	p.vmWriter.WriteLabel(l2)
 
 	// state: '}'
 

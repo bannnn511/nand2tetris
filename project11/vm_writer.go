@@ -72,16 +72,16 @@ func (w *VmWriter) WritePopVariable(segment VariableKind, idx uint) {
 	w.out.WriteString(pop)
 }
 
-func (w *VmWriter) WriteIf(label string) {
+func (w *VmWriter) WriteIf(label int) {
 	w.WriteIndentation()
 	w.Write("not\n")
 	w.WriteIndentation()
-	w.Write(fmt.Sprintf("if-goto %v\n", label))
+	w.Write(fmt.Sprintf("if-goto L%d\n", label))
 }
 
-func (w *VmWriter) WriteGoto(label string) {
+func (w *VmWriter) WriteGoto(idx int) {
 	w.WriteIndentation()
-	w.Write(fmt.Sprintf("goto %v\n", label))
+	w.Write(fmt.Sprintf("goto L%d\n", idx))
 }
 
 func (w *VmWriter) WriteReturn() {
@@ -116,8 +116,8 @@ func (w *VmWriter) WriteOp(op string) {
 	}
 }
 
-func (w *VmWriter) WriteLabel(label string) {
-	w.out.WriteString(fmt.Sprintf("label %v\n", label))
+func (w *VmWriter) WriteLabel(label int) {
+	w.out.WriteString(fmt.Sprintf("label L%d\n", label))
 }
 
 func (w *VmWriter) IncrLabel() {

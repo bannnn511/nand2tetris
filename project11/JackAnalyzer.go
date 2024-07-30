@@ -7,7 +7,7 @@ import (
 )
 
 func main() {
-	// os.Args = []string{"", "test/Seven/Main.jack"}
+	// os.Args = []string{"", "test/ConvertToBin"}
 	if len(os.Args) < 2 {
 		printErr("invalid number of arguments")
 	}
