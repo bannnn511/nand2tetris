@@ -65,31 +65,34 @@ func (p *Parser) ParseFile() {
 }
 
 func (p *Parser) compileSubroutine() {
-	// construction, function, method
+	p.routineSB = NewSymbolTable()
+	// state: subroutine type - construction, function, method
 	_, routineLit := p.getState()
 
 	p.next()
-	_, typeLit := p.getState()
+	// state: function type (void)
+	// _, typeLit := p.getState()
 
 	p.next()
+	// state: function name
 	_, fName := p.getState()
 	fName = p.className + "." + fName
 
-	p.vmWriter.writeFunction(routineLit, fName, 0, typeLit)
-
 	p.next()
-	p.writeTemplate() // (
+	// state: '('
 	p.next()
-	p.compileParameterList() // parameter
-	p.writeTemplate()        // )
+	p.compileParameterList() // parameters
+	// state: ')'
 	p.next()
-
-	p.writeTemplate()
+	// state: '{'
 
 	p.next()
 	for p.lit == "var" {
 		p.compileVarDec()
 	}
+
+	count := p.routineSB.VarCount(Var)
+	p.vmWriter.writeFunction(routineLit, fName, uint(count))
 
 	p.compileStatements()
 
@@ -179,6 +182,9 @@ func (p *Parser) compileDo() {
 	p.next()
 
 	// state: ';'
+	if nVars > 0 {
+
+	}
 	p.vmWriter.WriteDo(fName, nVars)
 
 	p.vmWriter.DecrIndent()
@@ -380,6 +386,14 @@ func (p *Parser) compileTerm2() {
 	case IDENT:
 		// state: identifier
 		identifier := p.lit
+		if p.classSB.IsExists(identifier) {
+			kind, idx := p.classSB.GetSegment(identifier)
+			p.vmWriter.WritePushVariableToStack(kind, idx)
+		} else if p.routineSB.IsExists(identifier) {
+			kind, idx := p.routineSB.GetSegment(identifier)
+			p.vmWriter.WritePushVariableToStack(kind, idx)
+		}
+
 		p.next()
 		if p.lit == "[" {
 			p.writeTemplate()
@@ -477,7 +491,6 @@ const (
 func (p *Parser) compileVarDec() {
 
 	// subroutine symbol table must be reconstruct for each subroutine
-	p.routineSB = NewSymbolTable()
 
 	p.kind = Var
 	p.writeTemplate()

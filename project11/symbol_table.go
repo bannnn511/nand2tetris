@@ -76,9 +76,22 @@ func (sb *SymbolTable) KindOf(name string) VariableKind {
 	return sb.m[name].kind
 }
 
+// GetSegment returns variable kind and index
+func (sb *SymbolTable) GetSegment(name string) (VariableKind, uint32) {
+	kind := sb.KindOf(name)
+	idx := sb.IndexOf(name)
+
+	return kind, idx
+}
+
 // VarCount returns number of variable of the given kind
 func (sb *SymbolTable) VarCount(kind VariableKind) uint32 {
 	return sb.count[kind] + 1
+}
+
+func (sb *SymbolTable) IsExists(name string) bool {
+	_, ok := sb.m[name]
+	return ok
 }
 
 func (sb *SymbolTable) Print() {

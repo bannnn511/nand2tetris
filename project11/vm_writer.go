@@ -18,7 +18,6 @@ func (w *VmWriter) writeFunction(
 	routine string,
 	name string,
 	nVars uint,
-	fType string,
 ) {
 	w.writeIndentation()
 
@@ -57,6 +56,11 @@ func (w *VmWriter) WriteDoWithReturn(
 
 	popTo := fmt.Sprintf("pop %v %d\n", variableKind, index)
 	w.out.WriteString(popTo)
+}
+
+func (w *VmWriter) WritePushVariableToStack(segment VariableKind, idx uint32) {
+	w.writeIndentation()
+	w.out.WriteString(fmt.Sprintf("push %v %d\n", segment.String(), idx))
 }
 
 func (w *VmWriter) WriteReturn() {
