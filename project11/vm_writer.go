@@ -5,6 +5,8 @@ import (
 	"strings"
 )
 
+var labelCount = 0
+
 type VmWriter struct {
 	out         strings.Builder
 	indentation int
@@ -14,12 +16,12 @@ func NewVmWriter() *VmWriter {
 	return &VmWriter{}
 }
 
-func (w *VmWriter) writeFunction(
+func (w *VmWriter) WriteFunction(
 	routine string,
 	name string,
 	nVars uint,
 ) {
-	w.writeIndentation()
+	w.WriteIndentation()
 
 	tok := Lookup2(routine)
 	function := fmt.Sprintf("%v %v %d\n", tok, name, nVars)
@@ -31,12 +33,12 @@ func (w *VmWriter) WriteDo(
 	fName string,
 	nVars int,
 ) {
-	w.writeIndentation()
+	w.WriteIndentation()
 
 	do := fmt.Sprintf("call %v %d\n", fName, nVars)
 	w.out.WriteString(do)
 
-	w.writeIndentation()
+	w.WriteIndentation()
 
 	w.out.WriteString("pop temp 0\n")
 }
@@ -45,45 +47,74 @@ func (w *VmWriter) WriteDoWithReturn(
 	fName string,
 	nVars int,
 	variableKind string,
-	index uint32,
+	index uint,
 ) {
-	w.writeIndentation()
+	w.WriteIndentation()
 
 	do := fmt.Sprintf("call %v %d\n", fName, nVars)
 	w.out.WriteString(do)
 
-	w.writeIndentation()
+	w.WriteIndentation()
 
 	popTo := fmt.Sprintf("pop %v %d\n", variableKind, index)
 	w.out.WriteString(popTo)
 }
 
-func (w *VmWriter) WritePushVariableToStack(segment VariableKind, idx uint32) {
-	w.writeIndentation()
-	w.out.WriteString(fmt.Sprintf("push %v %d\n", segment.String(), idx))
+func (w *VmWriter) WritePushVariableToStack(segment VariableKind, idx uint) {
+	w.WriteIndentation()
+	push := fmt.Sprintf("push %v %d\n", segment.String(), idx)
+	w.out.WriteString(push)
+}
+
+func (w *VmWriter) WritePopVariable(segment VariableKind, idx uint) {
+	w.WriteIndentation()
+	pop := fmt.Sprintf("pop %v %d\n", segment.String(), idx)
+	w.out.WriteString(pop)
 }
 
 func (w *VmWriter) WriteReturn() {
-	w.writeIndentation()
+	w.WriteIndentation()
 	w.out.WriteString("push constant 0\n")
 
-	w.writeIndentation()
+	w.WriteIndentation()
 	w.out.WriteString("return\n")
 }
 
 func (w *VmWriter) WriteOp(op string) {
-	w.writeIndentation()
+	w.WriteIndentation()
 	switch op {
 	case "*":
-		w.write("call Math.multiply 2\n")
+		w.Write("call Math.multiply 2\n")
 	case "+":
-		w.write("add\n")
+		w.Write("add\n")
 	case "-":
-		w.write("neg\n")
+		w.Write("neg\n")
 	case "<":
 	default:
-		w.write(op + "\n")
+		w.Write(op + "\n")
 	}
+}
+
+func (w *VmWriter) WriteLabel() {
+	label := fmt.Sprintf("L%d", labelCount)
+	w.out.WriteString(fmt.Sprintf("label %v\n", label))
+	labelCount++
+}
+
+func (w *VmWriter) GetNextLabel() int {
+	return labelCount
+}
+
+func (w *VmWriter) WriteFalse() {
+	w.WriteIndentation()
+	w.Write("push constant 1\n")
+}
+
+func (w *VmWriter) WriteTrue() {
+	w.WriteIndentation()
+	w.Write("push constant 1\n")
+	w.WriteIndentation()
+	w.Write("neg\n")
 }
 
 // func (w *VmWriter) WriteOp(op string) {
@@ -104,7 +135,7 @@ func (w *VmWriter) WriteOp(op string) {
 // 	w.out.WriteString(symbol)
 // }
 
-func (w *VmWriter) write(str string) {
+func (w *VmWriter) Write(str string) {
 	w.out.WriteString(str)
 }
 
@@ -121,12 +152,12 @@ func (w *VmWriter) DecrIndent() {
 }
 
 func (w *VmWriter) writeWithIndentation(str string) {
-	w.writeIndentation()
-	w.write(str)
+	w.WriteIndentation()
+	w.Write(str)
 }
 
-func (w *VmWriter) writeIndentation() {
+func (w *VmWriter) WriteIndentation() {
 	for i := 0; i < w.indentation; i++ {
-		w.write(" ")
+		w.Write(" ")
 	}
 }

@@ -14,6 +14,13 @@ function Main.main 1
     push constant 0
     return
 function Main.convert 3
+    push constant 1
+    neg
+    pop local 2
+label L0
+    push local 2
+    not
+    if go-to L1
     push local 1
     push constant 1
     add
@@ -32,6 +39,9 @@ function Main.convert 3
     push constant 0
     call Memory.poke 2
     pop temp 0
+    push constant 1
+    pop local 2
+label L1
     push constant 0
     return
 function Main.nextMask 1
@@ -40,11 +50,17 @@ function Main.nextMask 1
     push constant 0
     return
 function Main.fillMemory 1
+label L2
+    push constant 0
+    >
+    not
+    if go-to L3
     call Memory.poke 2
     pop temp 0
     push constant 1
     neg
     push constant 1
     add
+label L3
     push constant 0
     return

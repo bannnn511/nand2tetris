@@ -17,18 +17,18 @@ type Symbol struct {
 	sType Token  // primitive token
 	uType string // user defined type
 	kind  VariableKind
-	index uint32
+	index uint
 }
 
 type SymbolTable struct {
 	m     map[string]Symbol
-	count map[VariableKind]uint32
+	count map[VariableKind]uint
 }
 
 func NewSymbolTable() *SymbolTable {
 	return &SymbolTable{
 		m:     make(map[string]Symbol),
-		count: make(map[VariableKind]uint32),
+		count: make(map[VariableKind]uint),
 	}
 }
 
@@ -62,7 +62,7 @@ func (sb *SymbolTable) Define(
 }
 
 // IndexOf returns count index variable name
-func (sb *SymbolTable) IndexOf(name string) uint32 {
+func (sb *SymbolTable) IndexOf(name string) uint {
 	return sb.m[name].index
 }
 
@@ -77,7 +77,7 @@ func (sb *SymbolTable) KindOf(name string) VariableKind {
 }
 
 // GetSegment returns variable kind and index
-func (sb *SymbolTable) GetSegment(name string) (VariableKind, uint32) {
+func (sb *SymbolTable) GetSegment(name string) (VariableKind, uint) {
 	kind := sb.KindOf(name)
 	idx := sb.IndexOf(name)
 
@@ -85,7 +85,7 @@ func (sb *SymbolTable) GetSegment(name string) (VariableKind, uint32) {
 }
 
 // VarCount returns number of variable of the given kind
-func (sb *SymbolTable) VarCount(kind VariableKind) uint32 {
+func (sb *SymbolTable) VarCount(kind VariableKind) uint {
 	return sb.count[kind] + 1
 }
 

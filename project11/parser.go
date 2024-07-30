@@ -92,7 +92,7 @@ func (p *Parser) compileSubroutine() {
 	}
 
 	count := p.routineSB.VarCount(Var)
-	p.vmWriter.writeFunction(routineLit, fName, uint(count))
+	p.vmWriter.WriteFunction(routineLit, fName, count)
 
 	p.compileStatements()
 
@@ -261,24 +261,30 @@ func (p *Parser) compileLet() {
 
 // 'while' '(' expression ')' '{' statements '}'
 func (p *Parser) compileWhile() {
-
-	p.writeTemplate() // while
-
-	p.next()
-	p.writeTemplate() // (
+	p.vmWriter.IncrIndent()
+	// state: while
+	p.vmWriter.WriteLabel()
 
 	p.next()
-	p.compileExpressions()
+	// state: '('
+	p.next()
+	p.compileExpressions2()
+	// state: ')'
 
-	p.writeTemplate() // )
+	p.vmWriter.WriteIndentation()
+	p.vmWriter.Write("not\n")
+	p.vmWriter.WriteIndentation()
+	p.vmWriter.Write(fmt.Sprintf("if go-to L%d\n", p.vmWriter.GetNextLabel()))
+	p.vmWriter.DecrIndent()
 
 	p.next()
-	p.writeTemplate() // {
+	// state: {
 
 	p.next()
 	p.compileStatements()
+	p.vmWriter.WriteLabel()
 
-	p.writeTemplate() // }
+	// state: '}'
 
 	p.next()
 }
@@ -371,28 +377,56 @@ func (p *Parser) compileExpressions2() {
 
 }
 
+func (p *Parser) shouldPushToVariable(name string) {
+	if p.classSB.IsExists(name) {
+		kind, idx := p.classSB.GetSegment(name)
+		p.vmWriter.WritePushVariableToStack(kind, idx)
+	} else if p.routineSB.IsExists(name) {
+		kind, idx := p.routineSB.GetSegment(name)
+		p.vmWriter.WritePushVariableToStack(kind, idx)
+	}
+}
+
+func (p *Parser) shouldPopToVariable(name string) {
+	if name == "" {
+		return
+	}
+	if p.classSB.IsExists(name) {
+		kind, idx := p.classSB.GetSegment(name)
+		p.vmWriter.WritePopVariable(kind, idx)
+	} else if p.routineSB.IsExists(name) {
+		kind, idx := p.routineSB.GetSegment(name)
+		p.vmWriter.WritePopVariable(kind, idx)
+	}
+}
+
 func (p *Parser) compileTerm2() {
 	switch p.tok {
 	case INT:
-		p.vmWriter.writeIndentation()
-		p.vmWriter.write(fmt.Sprintf("push constant %v\n", p.lit))
+		p.vmWriter.WriteIndentation()
+		p.vmWriter.Write(fmt.Sprintf("push constant %v\n", p.lit))
 		p.next()
 	case CHAR:
 		p.writeTemplate()
 		p.next()
 	case KEYWORD:
-		p.writeTemplate()
+		switch p.lit {
+		case "true":
+			p.vmWriter.WriteTrue()
+			p.shouldPopToVariable(p.variableName)
+			p.variableName = ""
+		case "false":
+			p.vmWriter.WriteFalse()
+			p.shouldPopToVariable(p.variableName)
+			p.variableName = ""
+		default:
+			println("implement other keyword case", p.lit)
+		}
 		p.next()
 	case IDENT:
 		// state: identifier
 		identifier := p.lit
-		if p.classSB.IsExists(identifier) {
-			kind, idx := p.classSB.GetSegment(identifier)
-			p.vmWriter.WritePushVariableToStack(kind, idx)
-		} else if p.routineSB.IsExists(identifier) {
-			kind, idx := p.routineSB.GetSegment(identifier)
-			p.vmWriter.WritePushVariableToStack(kind, idx)
-		}
+		p.shouldPushToVariable(identifier)
 
 		p.next()
 		if p.lit == "[" {
