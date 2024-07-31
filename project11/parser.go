@@ -68,7 +68,7 @@ func (p *Parser) compileSubroutine() {
 
 	p.next() // state: '('
 	p.next()
-	p.compileParameterList() // parameters
+	paramCount := p.compileParameterList() // parameters
 	// state: ')'
 	p.next() // state: '{'
 
@@ -78,7 +78,12 @@ func (p *Parser) compileSubroutine() {
 	}
 
 	count := p.routineSB.VarCount(Var)
-	p.vmWriter.WriteFunction(routineLit, fName, count)
+	p.vmWriter.WriteFunction(
+		routineLit,
+		fName,
+		count,
+		uint(paramCount),
+	)
 
 	p.compileStatements()
 
@@ -87,7 +92,8 @@ func (p *Parser) compileSubroutine() {
 	p.next()
 }
 
-func (p *Parser) compileParameterList() {
+func (p *Parser) compileParameterList() int {
+	count := 0
 	for p.tok != SYMBOL {
 		// p.writeTemplate()
 		p.next()
@@ -99,7 +105,10 @@ func (p *Parser) compileParameterList() {
 			p.writeTemplate()
 			p.next()
 		}
+		count++
 	}
+
+	return count
 }
 
 // <statements>
@@ -310,6 +319,9 @@ func (p *Parser) compileTerm2() {
 			p.variableName = ""
 		case "false":
 			p.vmWriter.WriteFalse()
+			p.shouldPopToVariable(p.variableName)
+			p.variableName = ""
+		case "this":
 			p.shouldPopToVariable(p.variableName)
 			p.variableName = ""
 		default:

@@ -22,11 +22,18 @@ func (w *VmWriter) WriteFunction(
 	routine string,
 	name string,
 	nVars uint,
+	params uint,
 ) {
-	tok := Lookup2(routine)
-	function := fmt.Sprintf("%v %v %d\n", tok, name, nVars)
-
+	function := fmt.Sprintf("function %v %d\n", name, nVars)
 	w.out.WriteString(function)
+
+	if routine == "constructor" {
+		pushArg := fmt.Sprintf("push constant %d\n", params)
+		w.WriteWithIndentation(pushArg)
+
+		w.WriteWithIndentation("call Memory.deAlloc 1\n")
+		w.WriteWithIndentation("pop pointer 0\n")
+	}
 }
 
 func (w *VmWriter) WriteDo(
