@@ -1,4 +1,4 @@
-function if1.main 1
+    function if2.main 1
     push constant 8000
     call Memory.peek 1
     pop local 0
@@ -7,7 +7,7 @@ function if1.main 1
     pop temp 0
     push constant 0
     return
-function if1.convert 3
+    function if2.convert 3
     push constant 1
     neg
     pop local 2
@@ -21,14 +21,25 @@ function if1.convert 3
     not
     not
     if-goto L0
+    push argument 0
+    push local 0
+    and
+    push constant 0
+    eq
+    not
+    not
+    if-goto L2
+    push constant 8000
     push local 1
-    push constant 2
     add
-    pop local 1
+    push constant 1
+    call Memory.poke 2
+    pop temp 0
+    goto L3
+label L2
+label L3
     goto L1
 label L0
-    push constant 0
-    pop local 2
 label L1
     push constant 0
     return

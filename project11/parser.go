@@ -138,7 +138,6 @@ func (p *Parser) compileStatements() {
 
 // <returnStatement>
 func (p *Parser) compileReturn() {
-	p.vmWriter.IncrIndent()
 	// return
 	p.vmWriter.WriteReturn()
 
@@ -148,15 +147,12 @@ func (p *Parser) compileReturn() {
 	}
 
 	p.writeTemplate()
-	p.vmWriter.DecrIndent()
 
 	p.next()
 }
 
 // <doStatement>
 func (p *Parser) compileDo() {
-	p.vmWriter.IncrIndent()
-
 	// state: do
 
 	p.next()
@@ -187,7 +183,6 @@ func (p *Parser) compileDo() {
 	}
 	p.vmWriter.WriteDo(fName, nVars)
 
-	p.vmWriter.DecrIndent()
 	p.next()
 }
 
@@ -195,46 +190,25 @@ var ifCount = 0
 
 // 'if' '(' expression ')' '{' statements '}' ( 'else' '{' statements '}' )?
 func (p *Parser) compileIf() {
-	p.vmWriter.IncrIndent()
-
 	// state:if
-	p.next()
-	// state: '('
-
-	p.next()
+	p.next() // '('
+	p.next() // ')'
 	p.compileExpressions2()
 
 	l1 := p.vmWriter.GetLabelIdx()
-	p.vmWriter.IncrLabel()
 	l2 := p.vmWriter.GetLabelIdx()
-	p.vmWriter.IncrLabel()
-	p.gotoStack = append(p.gotoStack, l1)
 
-	fmt.Println("------------", l1, l2)
-	p.vmWriter.WriteIf(l2)
-	p.vmWriter.DecrIndent()
+	p.vmWriter.WriteIf(l1)
 
-	// ')'
-	p.next()
-	// '{'
-	p.next()
+	p.next() // '{'
+	p.next() // '}'
 	p.compileStatements()
-	// '}'
 
-	if len(p.gotoStack) > 0 {
-		// write label
-		l2Index := p.gotoStack[0]
-		p.gotoStack = p.gotoStack[1:]
+	p.vmWriter.WriteGoto(l2)
+	p.vmWriter.WriteLabel(l1)
 
-		p.vmWriter.IncrIndent()
-		p.vmWriter.WriteGoto(l2Index)
-		p.vmWriter.DecrIndent()
-	}
-
-	p.next()
+	p.next() // else
 	if p.tok == KEYWORD && p.lit == "else" {
-		p.vmWriter.WriteIndentation()
-		p.vmWriter.WriteLabel(l2)
 
 		// state: else
 		p.next()
@@ -251,19 +225,17 @@ func (p *Parser) compileIf() {
 		// '}'
 		p.next()
 	}
-	p.vmWriter.WriteLabel(l1)
+	p.vmWriter.WriteLabel(l2)
 }
 
 // <letStatement>
 func (p *Parser) compileLet() {
-	p.vmWriter.IncrIndent()
 	// state: let
 
-	p.next()
-	// state: varName
+	p.next() // state: varName
 	p.variableName = p.lit
 
-	p.next()
+	p.next() // state: =
 	if p.lit == "[" {
 		p.writeTemplate() // [
 		p.next()
@@ -272,108 +244,37 @@ func (p *Parser) compileLet() {
 		p.next()
 	}
 
-	// state: =
-	p.next()
+	p.next() // state:
 	p.compileExpressions2()
-	// state: ;
 	p.shouldPopToVariable(p.variableName)
 	p.variableName = ""
 
-	p.vmWriter.DecrIndent()
 	p.next()
 }
 
 // 'while' '(' expression ')' '{' statements '}'
 func (p *Parser) compileWhile() {
-	p.vmWriter.IncrIndent()
 	// state: while
 
 	l1 := p.vmWriter.GetLabelIdx()
 	p.vmWriter.WriteLabel(l1)
-	p.vmWriter.IncrLabel()
 	l2 := p.vmWriter.GetLabelIdx()
 
-	p.next()
-	// state: '('
-	p.next()
+	p.next() // state: '('
+	p.next() // state: ')'
 	p.compileExpressions2()
-	// state: ')'
 
 	p.vmWriter.WriteIf(l2)
-	p.vmWriter.IncrLabel()
-	p.vmWriter.DecrIndent()
-	p.next()
-	// state: {
+	p.next() // state: {
 	p.next()
 	p.compileStatements()
 
-	p.vmWriter.IncrIndent()
 	p.vmWriter.WriteGoto(l1)
-	p.vmWriter.DecrIndent()
 	p.vmWriter.WriteLabel(l2)
 
 	// state: '}'
 
 	p.next()
-}
-
-func (p *Parser) CompileTerm() {
-	switch p.tok {
-	case INT:
-		p.writeTemplate()
-		p.next()
-	case CHAR:
-		p.writeTemplate()
-		p.next()
-	case KEYWORD:
-		p.writeTemplate()
-		p.next()
-	case IDENT:
-		p.writeTemplate()
-		p.next()
-		if p.lit == "[" {
-			p.writeTemplate()
-			p.next()
-			p.compileExpressions2()
-			p.writeTemplate()
-			p.next()
-		} else if p.lit == "." {
-			p.writeTemplate() // symbol
-			p.next()
-			p.writeTemplate() // identifier
-			p.next()
-			p.writeTemplate() // symbol
-			p.next()
-			p.compileExpressionList()
-			p.writeTemplate() // symbol
-			p.next()
-		} else if p.lit == "(" {
-			p.writeTemplate() // symbol
-			p.compileExpressionList()
-			p.next()
-			p.writeTemplate() // symbol
-			p.next()
-		}
-		// else if p.lit == "~" || p.lit == "-" {
-		//	p.writeTemplate() // symbol
-		//	p.next()
-		//	p.CompileTerm()
-		// }
-	case SYMBOL:
-		if p.lit == "(" {
-			p.writeTemplate() // symbol
-			p.next()
-			p.compileExpressions2()
-			p.writeTemplate() // symbol
-			p.next()
-		} else if p.lit == "~" || p.lit == "-" {
-			p.writeTemplate() // symbol
-			p.next()
-			p.CompileTerm()
-		}
-	default:
-	}
-
 }
 
 // term(op term)*
@@ -421,8 +322,7 @@ func (p *Parser) shouldPopToVariable(name string) {
 func (p *Parser) compileTerm2() {
 	switch p.tok {
 	case INT:
-		p.vmWriter.WriteIndentation()
-		p.vmWriter.Write(fmt.Sprintf("push constant %v\n", p.lit))
+		p.vmWriter.WriteWithIndentation(fmt.Sprintf("push constant %v\n", p.lit))
 		p.next()
 	case CHAR:
 		p.writeTemplate()

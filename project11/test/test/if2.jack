@@ -1,4 +1,4 @@
-class if1 {
+class if2 {
 
     /**
      * Initializes RAM[8001]..RAM[8016] to -1,
@@ -19,12 +19,11 @@ class if1 {
 
     	let loop = true;
 		let position = position + 1;
-		if (~(position > 16)) {
-			let position = position + 2;
-		}
-		else {
-			let loop = false;
-		}
+	    if (~(position > 16)) {
+            if (~((value & mask) = 0)) {
+                do Memory.poke(8000 + position, 1);
+            }
+    	}
     	return;
     }
 
