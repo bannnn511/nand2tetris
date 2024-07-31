@@ -44,11 +44,19 @@ func TestParser_ParseFile(t *testing.T) {
 			},
 		},
 		{
-			"2. 2 if",
+			"3. 2 if",
 			fields{
 				dest: "./test/test/if2.jack",
 				want: "./test/test/if2.vm",
 				out:  "./test/test/if2.an",
+			},
+		},
+		{
+			"4. ./ConvertToBin",
+			fields{
+				dest: "./test/ConvertToBin/Main.jack",
+				want: "./test/ConvertToBin/Main.vm",
+				out:  "./test/ConvertToBin/Main.an",
 			},
 		},
 	}

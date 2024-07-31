@@ -83,8 +83,6 @@ func (w *VmWriter) WriteGoto(idx int) {
 
 func (w *VmWriter) WriteReturn() {
 	w.WriteIndentation(4)
-	w.out.WriteString("push constant 0\n")
-	w.WriteIndentation(4)
 	w.out.WriteString("return\n")
 }
 
@@ -96,7 +94,7 @@ func (w *VmWriter) WriteOp(op string) {
 	case "+":
 		w.Write("add\n")
 	case "-":
-		w.Write("neg\n")
+		w.Write("sub\n")
 	case "<":
 		w.Write("lt\n")
 	case ">":

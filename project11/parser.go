@@ -139,15 +139,14 @@ func (p *Parser) compileStatements() {
 // <returnStatement>
 func (p *Parser) compileReturn() {
 	// return
-	p.vmWriter.WriteReturn()
-
 	p.next()
 	if p.tok != SYMBOL && p.lit != ";" {
 		p.compileExpressions2()
+	} else {
+		p.vmWriter.WriteIndentation(4)
+		p.vmWriter.out.WriteString("push constant 0\n")
 	}
-
-	p.writeTemplate()
-
+	p.vmWriter.WriteReturn()
 	p.next()
 }
 
@@ -192,7 +191,7 @@ var ifCount = 0
 func (p *Parser) compileIf() {
 	// state:if
 	p.next() // '('
-	p.next() // ')'
+	p.next() // exp
 	p.compileExpressions2()
 
 	l1 := p.vmWriter.GetLabelIdx()
@@ -201,7 +200,7 @@ func (p *Parser) compileIf() {
 	p.vmWriter.WriteIf(l2)
 
 	p.next() // '{'
-	p.next() // '}'
+	p.next()
 	p.compileStatements()
 
 	p.vmWriter.WriteGoto(l1)
@@ -209,7 +208,6 @@ func (p *Parser) compileIf() {
 
 	p.next() // else
 	if p.tok == KEYWORD && p.lit == "else" {
-
 		// state: else
 		p.next() // '{'
 		p.next()
@@ -272,7 +270,6 @@ func (p *Parser) compileWhile() {
 	p.vmWriter.WriteLabel(l2)
 
 	// state: '}'
-
 	p.next()
 }
 
@@ -282,12 +279,8 @@ func (p *Parser) compileExpressions2() {
 	for p.tok == SYMBOL && IsOp(p.lit) {
 		// op
 		op := p.lit
-		p.next()
-
-		// term
+		p.next() // term
 		p.compileTerm2()
-
-		// op
 		p.vmWriter.WriteOp(op)
 	}
 }
@@ -356,13 +349,9 @@ func (p *Parser) compileTerm2() {
 		} else if p.lit == "." {
 			// state: '.'
 			fName := identifier + p.lit
-			p.next()
-
-			// state: identifier
+			p.next() // state: identifier
 			fName += p.lit
-			p.next()
-
-			// state: symbol
+			p.next() // state: symbol
 			p.next()
 
 			nVars := p.compileExpressionList()
@@ -380,27 +369,29 @@ func (p *Parser) compileTerm2() {
 		} else if p.lit == "(" {
 			p.writeTemplate() // symbol
 			p.compileExpressionList()
-			p.next()
-			p.writeTemplate() // symbol
-			p.next()
-		}
-		// else if p.lit == "~" || p.lit == "-" {
-		//	p.writeTemplate() // symbol
-		//	p.next()
-		//	p.CompileTerm()
-		// }
-	case SYMBOL:
-		if p.lit == "(" {
-			p.writeTemplate() // symbol
-			p.next()
-			p.compileExpressions2()
-			p.writeTemplate() // symbol
+			p.next() // symbol
 			p.next()
 		} else if p.lit == "~" || p.lit == "-" {
 			op := p.lit
 			p.next()
 			p.compileTerm2()
 			p.vmWriter.WriteOp(op)
+		}
+	case SYMBOL:
+		if p.lit == "(" {
+			p.writeTemplate() // symbol
+			p.next()          // symbol
+			p.compileExpressions2()
+			p.next()
+		} else if p.lit == "~" || p.lit == "-" {
+			op := p.lit
+			p.next()
+			p.compileTerm2()
+			if op == "~" {
+				p.vmWriter.WriteWithIndentation("not\n")
+			} else {
+				p.vmWriter.WriteWithIndentation("neg\n")
+			}
 		}
 	default:
 	}
@@ -425,7 +416,7 @@ func (p *Parser) compileExpressionList() int {
 	if p.lit == "(" {
 		p.compileExpressions2()
 		for p.tok == SYMBOL && p.lit == "," {
-			p.writeTemplate() // symbol
+			// symbol
 			p.next()
 			p.compileExpressions2()
 		}
