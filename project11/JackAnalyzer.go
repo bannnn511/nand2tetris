@@ -44,7 +44,7 @@ func main() {
 		if err != nil {
 			printErr(err.Error())
 		}
-		parser.Init(jack, src)
+		parser.Init(src)
 		parser.ParseFile()
 
 		fileName := ""

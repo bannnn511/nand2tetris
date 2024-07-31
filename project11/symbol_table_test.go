@@ -65,10 +65,12 @@ func TestSymbolTable(t *testing.T) {
 				"KindOf",
 			)
 
+			_, gotType := sb.TypeOf(tt.fields.name)
+
 			assert.Equal(
 				t,
-				sb.TypeOf(tt.fields.name),
 				tt.fields.wantTok,
+				gotType,
 				"TypeOf",
 			)
 

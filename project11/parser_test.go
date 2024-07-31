@@ -59,13 +59,21 @@ func TestParser_ParseFile(t *testing.T) {
 				out:  "./test/ConvertToBin/Main.an",
 			},
 		},
+		{
+			"5. ./Square/Main.jack",
+			fields{
+				dest: "./test/Square/Main.jack",
+				want: "./test/Square/Main.vm",
+				out:  "./test/Square/Main.an",
+			},
+		},
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
 			src, err := os.ReadFile(tt.fields.dest)
 			assert.NoError(t, err)
 			var p pkg.Parser
-			p.Init("", src)
+			p.Init(src)
 			p.ParseFile()
 
 			err = os.WriteFile(tt.fields.out, []byte(p.VmOut()), 0644)

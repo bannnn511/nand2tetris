@@ -25,10 +25,9 @@ type Parser struct {
 	className    string
 	kind         VariableKind
 	variableName string
-	gotoStack    []int
 }
 
-func (p *Parser) Init(filename string, src []byte) {
+func (p *Parser) Init(src []byte) {
 	p.scanner.Init(src)
 	p.tok = START
 	p.classSB = NewSymbolTable()
@@ -39,16 +38,10 @@ func (p *Parser) Init(filename string, src []byte) {
 }
 
 func (p *Parser) ParseFile() {
-	p.next()
-
-	//  class
-	p.next()
-
-	// Main
+	p.next() //  class
+	p.next() // Main
 	p.className = p.lit
-	p.next()
-
-	// {
+	p.next() // {
 	p.next()
 
 	for p.lit == "static" || p.lit == "field" {
@@ -60,10 +53,6 @@ func (p *Parser) ParseFile() {
 		p.lit == "method" {
 		p.compileSubroutine()
 	}
-
-	// }
-	// p.writeTemplate()
-
 }
 
 func (p *Parser) compileSubroutine() {
@@ -71,22 +60,17 @@ func (p *Parser) compileSubroutine() {
 	// state: subroutine type - construction, function, method
 	_, routineLit := p.getState()
 
-	p.next()
-	// state: function type (void)
-	// _, typeLit := p.getState()
+	p.next() // state: function type (void)
+	p.next() // state: function name
 
-	p.next()
-	// state: function name
 	_, fName := p.getState()
 	fName = p.className + "." + fName
 
-	p.next()
-	// state: '('
+	p.next() // state: '('
 	p.next()
 	p.compileParameterList() // parameters
 	// state: ')'
-	p.next()
-	// state: '{'
+	p.next() // state: '{'
 
 	p.next()
 	for p.lit == "var" {
@@ -156,36 +140,35 @@ func (p *Parser) compileDo() {
 
 	p.next()
 	// state: identifier
-	fName := p.lit
+	variableName := p.lit
+	fName, vType := p.routineSB.TypeOf(variableName)
 
-	p.next()
+	// ILLEGAL should be language standard library
+	if vType == ILLEGAL {
+		fName = variableName
+	}
+
+	p.next() // '.' or '('
 	if p.lit == "." {
-		// state: '.'
 		fName += p.lit
-		p.next()
-
-		// state: identifier
+		p.next() // identifier
 		fName += p.lit
 		p.next()
 	}
 
-	// state: (
-	p.next()
+	p.next() // expressions
 	nVars := p.compileExpressionList()
-	// state: )
+	p.next() // state: ';'
 
-	p.next()
-
-	// state: ';'
-	if nVars > 0 {
-
+	// if vType is USR -> method function call
+	if vType == USR {
+		p.shouldPushToVariable(variableName)
+		nVars++
 	}
-	p.vmWriter.WriteDo(fName, nVars)
 
+	p.vmWriter.WriteDo(fName, nVars)
 	p.next()
 }
-
-var ifCount = 0
 
 // 'if' '(' expression ')' '{' statements '}' ( 'else' '{' statements '}' )?
 func (p *Parser) compileIf() {
@@ -355,14 +338,11 @@ func (p *Parser) compileTerm2() {
 			p.next()
 
 			nVars := p.compileExpressionList()
-			if nVars == 0 {
-				p.vmWriter.WriteDo(fName, nVars)
-			} else {
-				vKind := p.routineSB.KindOf(p.variableName)
-				index := p.routineSB.IndexOf(p.variableName)
-				p.vmWriter.WriteDoWithReturn(fName, nVars, vKind.String(), index)
-				p.variableName = ""
-			}
+			vKind := p.routineSB.KindOf(p.variableName)
+			index := p.routineSB.IndexOf(p.variableName)
+
+			p.vmWriter.WriteDoWithReturn(fName, nVars, vKind.String(), index)
+			p.variableName = ""
 
 			// state: symbol
 			p.next()
@@ -486,8 +466,6 @@ func (p *Parser) next() {
 	p.lit = lit
 	p.elements = append(p.elements, Ast{tok, lit})
 }
-
-const template = "<%v> %v </%v>\r\n"
 
 // writeTemplate writes KEYWORD, IDENT and SYMBOL token
 func (p *Parser) writeTemplate() {

@@ -67,8 +67,17 @@ func (sb *SymbolTable) IndexOf(name string) uint {
 }
 
 // TypeOf returns Token type of variable name
-func (sb *SymbolTable) TypeOf(name string) Token {
-	return sb.m[name].sType
+func (sb *SymbolTable) TypeOf(name string) (string, Token) {
+	v, ok := sb.m[name]
+	if !ok {
+		return "", ILLEGAL
+	}
+
+	if v.sType == USR {
+		return v.uType, v.sType
+	}
+
+	return v.sType.String(), v.sType
 }
 
 // KindOf returns variable kind
