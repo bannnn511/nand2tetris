@@ -233,7 +233,7 @@ function Square.moveLeft 0
     push this 1
     push this 2
     add
-    call Screen.drawRectangle 0
+    call Screen.drawRectangle 4
     pop temp 0
     push this 0
     push constant 2
@@ -301,7 +301,7 @@ function Square.moveRight 0
     push this 1
     push this 2
     add
-    call Screen.drawRectangle 0
+    call Screen.drawRectangle 4
     pop temp 0
     goto L10
 label L11

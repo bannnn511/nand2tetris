@@ -53,6 +53,8 @@ func (p *Parser) ParseFile() {
 		p.lit == "method" {
 		if p.lit == "function" || p.lit == "method" {
 			p.routineSB = NewSymbolTable()
+		}
+		if p.lit == "method" {
 			p.defineVariable(
 				Subroutine,
 				"this",
@@ -92,6 +94,9 @@ func (p *Parser) compileSubroutine() {
 		count,
 		uint(paramCount),
 	)
+
+	// if subroutine is method
+	// the caller must push the refernce to the opbbject
 	if routineLit == "method" {
 		p.shouldPushToVariable("this")
 		p.shouldPopToVariable("this")
@@ -442,10 +447,12 @@ func (p *Parser) compileExpressionList() int {
 	// if after '(' is a '(' -> new expression
 	if p.lit == "(" {
 		p.compileExpressions2()
+		count++
 		for p.tok == SYMBOL && p.lit == "," {
 			// symbol
 			p.next()
 			p.compileExpressions2()
+			count++
 		}
 	}
 
