@@ -21,7 +21,7 @@ function if2.convert 3
     not
     not
     if-goto L1
-    push argument 0
+    push argument 1
     push local 0
     and
     push constant 0

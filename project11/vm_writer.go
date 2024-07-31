@@ -31,7 +31,7 @@ func (w *VmWriter) WriteFunction(
 		pushArg := fmt.Sprintf("push constant %d\n", params)
 		w.WriteWithIndentation(pushArg)
 
-		w.WriteWithIndentation("call Memory.deAlloc 1\n")
+		w.WriteWithIndentation("call Memory.alloc 1\n")
 		w.WriteWithIndentation("pop pointer 0\n")
 	}
 }

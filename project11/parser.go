@@ -51,12 +51,20 @@ func (p *Parser) ParseFile() {
 	for p.lit == "constructor" ||
 		p.lit == "function" ||
 		p.lit == "method" {
+		if p.lit == "function" || p.lit == "method" {
+			p.routineSB = NewSymbolTable()
+			p.defineVariable(
+				Subroutine,
+				"this",
+				p.className,
+				Arg,
+			)
+		}
 		p.compileSubroutine()
 	}
 }
 
 func (p *Parser) compileSubroutine() {
-	p.routineSB = NewSymbolTable()
 	// state: subroutine type - construction, function, method
 	_, routineLit := p.getState()
 
@@ -84,6 +92,10 @@ func (p *Parser) compileSubroutine() {
 		count,
 		uint(paramCount),
 	)
+	if routineLit == "method" {
+		p.shouldPushToVariable("this")
+		p.shouldPopToVariable("this")
+	}
 
 	p.compileStatements()
 
@@ -307,8 +319,12 @@ func (p *Parser) shouldPopToVariable(name string) {
 		kind, idx := p.classSB.GetSegment(name)
 		p.vmWriter.WritePopVariable(kind, idx)
 	} else if p.routineSB.IsExists(name) {
-		kind, idx := p.routineSB.GetSegment(name)
-		p.vmWriter.WritePopVariable(kind, idx)
+		if name == "this" {
+			p.vmWriter.WriteWithIndentation("pop pointer 0\n")
+		} else {
+			kind, idx := p.routineSB.GetSegment(name)
+			p.vmWriter.WritePopVariable(kind, idx)
+		}
 	}
 }
 
@@ -331,16 +347,18 @@ func (p *Parser) compileTerm2() {
 			p.shouldPopToVariable(p.variableName)
 			p.variableName = ""
 		case "this":
+			// return this
 			if p.prev == "return" {
 				p.vmWriter.WriteWithIndentation("push pointer 0\n")
 			}
+
 			// method call with 'this'
 			if p.prev == "(" {
-				p.shouldPushToVariable("this")
-				p.shouldPopToVariable("this")
+				p.vmWriter.WriteWithIndentation("push pointer 0\n")
+			} else {
+				p.shouldPopToVariable(p.variableName)
+				p.variableName = ""
 			}
-			p.shouldPopToVariable(p.variableName)
-			p.variableName = ""
 		default:
 			println("implement other keyword case", p.lit)
 		}
@@ -449,12 +467,6 @@ func (p *Parser) compileVarDec() {
 }
 
 func (p *Parser) compileTypeAndVarName(scope VariableScope) {
-	p.defineVariable(
-		Subroutine,
-		"this",
-		p.className,
-		Arg,
-	)
 	vType := p.lit
 	// state: variable type
 	p.next()
