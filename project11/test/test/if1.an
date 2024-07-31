@@ -20,15 +20,15 @@ function if1.convert 3
     gt
     not
     not
-    if-goto L0
+    if-goto L1
     push local 1
     push constant 2
     add
     pop local 1
-    goto L1
-label L0
+    goto L0
+label L1
     push constant 0
     pop local 2
-label L1
+label L0
     push constant 0
     return

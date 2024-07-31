@@ -198,21 +198,20 @@ func (p *Parser) compileIf() {
 	l1 := p.vmWriter.GetLabelIdx()
 	l2 := p.vmWriter.GetLabelIdx()
 
-	p.vmWriter.WriteIf(l1)
+	p.vmWriter.WriteIf(l2)
 
 	p.next() // '{'
 	p.next() // '}'
 	p.compileStatements()
 
-	p.vmWriter.WriteGoto(l2)
-	p.vmWriter.WriteLabel(l1)
+	p.vmWriter.WriteGoto(l1)
+	p.vmWriter.WriteLabel(l2)
 
 	p.next() // else
 	if p.tok == KEYWORD && p.lit == "else" {
 
 		// state: else
-		p.next()
-		// '{'
+		p.next() // '{'
 		p.next()
 
 		// if else body is empty -> dont call next
@@ -225,7 +224,7 @@ func (p *Parser) compileIf() {
 		// '}'
 		p.next()
 	}
-	p.vmWriter.WriteLabel(l2)
+	p.vmWriter.WriteLabel(l1)
 }
 
 // <letStatement>

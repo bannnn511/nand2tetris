@@ -26,7 +26,6 @@ func (w *VmWriter) WriteFunction(
 	tok := Lookup2(routine)
 	function := fmt.Sprintf("%v %v %d\n", tok, name, nVars)
 
-	w.WriteIndentation(4)
 	w.out.WriteString(function)
 }
 
