@@ -5,15 +5,17 @@ import (
 	"strings"
 )
 
-var labelCount = 0
-
 type VmWriter struct {
 	out         strings.Builder
 	indentation int
+	labelCount  int
 }
 
 func NewVmWriter() *VmWriter {
-	return &VmWriter{}
+	return &VmWriter{
+		indentation: 0,
+		labelCount:  0,
+	}
 }
 
 func (w *VmWriter) WriteFunction(
@@ -121,20 +123,20 @@ func (w *VmWriter) WriteLabel(label int) {
 }
 
 func (w *VmWriter) IncrLabel() {
-	labelCount++
+	w.labelCount++
 }
 
 func (w *VmWriter) GetLabelIdx() int {
-	return labelCount
+	return w.labelCount
 }
 
 func (w *VmWriter) GetLabel() string {
-	return fmt.Sprintf("L%d", labelCount)
+	return fmt.Sprintf("L%d", w.labelCount)
 }
 
 func (w *VmWriter) WriteFalse() {
 	w.WriteIndentation()
-	w.Write("push constant 1\n")
+	w.Write("push constant 0\n")
 }
 
 func (w *VmWriter) WriteTrue() {

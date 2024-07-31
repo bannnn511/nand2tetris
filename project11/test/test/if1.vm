@@ -1,4 +1,4 @@
-function Main.main 1
+function loop1.main 1
     push constant 8000
     call Memory.peek 1
     pop local 0
@@ -7,19 +7,28 @@ function Main.main 1
     pop temp 0
     push constant 0
     return
-function Main.convert 3
+function loop1.convert 3
     push constant 1
     neg
     pop local 2
-label L0
-    push local 2
-    not
-    if-goto L1
     push local 1
     push constant 1
     add
     pop local 1
+    push local 1
+    push constant 16
+    gt
+    not
+    not
+    if-goto L1
+    push local 1
+    push constant 2
+    add
+    pop local 1
     goto L0
 label L1
+    push constant 0
+    pop local 2
+label L0
     push constant 0
     return

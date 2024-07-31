@@ -1,4 +1,4 @@
-class Main {
+class loop1 {
 
     /**
      * Initializes RAM[8001]..RAM[8016] to -1,
@@ -18,9 +18,15 @@ class Main {
     	var boolean loop;
 
     	let loop = true;
-    	while (loop) {
-    	    let position = position + 1;
-    	}
+		let position = position + 1;
+		if (~(position > 16)) {
+			let position = position + 2;
+		}
+		else {
+			let loop = false;
+		}
     	return;
     }
+
+
 }

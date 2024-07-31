@@ -207,8 +207,10 @@ func (p *Parser) compileIf() {
 	l1 := p.vmWriter.GetLabelIdx()
 	p.vmWriter.IncrLabel()
 	l2 := p.vmWriter.GetLabelIdx()
+	p.vmWriter.IncrLabel()
 	p.gotoStack = append(p.gotoStack, l1)
 
+	fmt.Println("------------", l1, l2)
 	p.vmWriter.WriteIf(l2)
 	p.vmWriter.DecrIndent()
 

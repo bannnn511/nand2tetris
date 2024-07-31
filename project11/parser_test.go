@@ -27,6 +27,22 @@ func TestParser_ParseFile(t *testing.T) {
 				out:  "./test/Seven/Main.an",
 			},
 		},
+		{
+			"2. 1 if",
+			fields{
+				dest: "./test/test/if1.jack",
+				want: "./test/test/if1.vm",
+				out:  "./test/test/if1.an",
+			},
+		},
+		{
+			"2. 1 while",
+			fields{
+				dest: "./test/test/while1.jack",
+				want: "./test/test/while1.vm",
+				out:  "./test/test/while1.an",
+			},
+		},
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {

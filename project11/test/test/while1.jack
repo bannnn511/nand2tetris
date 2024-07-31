@@ -1,4 +1,4 @@
-class Main {
+class while1 {
 
     /**
      * Initializes RAM[8001]..RAM[8016] to -1,
