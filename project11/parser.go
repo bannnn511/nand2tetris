@@ -163,6 +163,10 @@ func (p *Parser) compileDo() {
 		p.next() // identifier
 		fName += p.lit
 		p.next()
+	} else if vType == ILLEGAL {
+		// method call
+		p.vmWriter.WriteWithIndentation("push pointer 0\n")
+		fName = p.className + "." + fName
 	}
 
 	p.next() // expressions
@@ -294,6 +298,7 @@ func (p *Parser) shouldPopToVariable(name string) {
 	if name == "" {
 		return
 	}
+
 	if p.classSB.IsExists(name) {
 		kind, idx := p.classSB.GetSegment(name)
 		p.vmWriter.WritePopVariable(kind, idx)

@@ -135,7 +135,7 @@ func (v VariableKind) String() string {
 	case Static:
 		return "static"
 	case Field:
-		return "field"
+		return "this"
 	case Var:
 		return "local"
 	case Arg:
