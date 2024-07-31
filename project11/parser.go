@@ -158,6 +158,9 @@ func (p *Parser) compileDo() {
 	}
 
 	p.next() // '.' or '('
+
+	// method call will use this as argument -> nVars add 1 as offset
+	methodArg := 0
 	if p.lit == "." {
 		fName += p.lit
 		p.next() // identifier
@@ -167,6 +170,7 @@ func (p *Parser) compileDo() {
 		// method call
 		p.vmWriter.WriteWithIndentation("push pointer 0\n")
 		fName = p.className + "." + fName
+		methodArg++
 	}
 
 	p.next() // expressions
@@ -179,7 +183,7 @@ func (p *Parser) compileDo() {
 		nVars++
 	}
 
-	p.vmWriter.WriteDo(fName, nVars)
+	p.vmWriter.WriteDo(fName, nVars+methodArg)
 	p.next()
 }
 
@@ -327,6 +331,14 @@ func (p *Parser) compileTerm2() {
 			p.shouldPopToVariable(p.variableName)
 			p.variableName = ""
 		case "this":
+			if p.prev == "return" {
+				p.vmWriter.WriteWithIndentation("push pointer 0\n")
+			}
+			// method call with 'this'
+			if p.prev == "(" {
+				p.shouldPushToVariable("this")
+				p.shouldPopToVariable("this")
+			}
 			p.shouldPopToVariable(p.variableName)
 			p.variableName = ""
 		default:
@@ -437,6 +449,12 @@ func (p *Parser) compileVarDec() {
 }
 
 func (p *Parser) compileTypeAndVarName(scope VariableScope) {
+	p.defineVariable(
+		Subroutine,
+		"this",
+		p.className,
+		Arg,
+	)
 	vType := p.lit
 	// state: variable type
 	p.next()

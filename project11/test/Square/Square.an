@@ -9,8 +9,9 @@ function Square.new 0
     push argument 2
     pop this 2
     push pointer 0
-    call Square.draw 0
+    call Square.draw 1
     pop temp 0
+    push pointer 0
     return
 function Square.dispose 0
     call Memory.deAlloc 1
@@ -65,14 +66,14 @@ function Square.incSize 0
     not
     if-goto L1
     push pointer 0
-    call Square.erase 0
+    call Square.erase 1
     pop temp 0
     push this 2
     push constant 2
     add
     pop this 2
     push pointer 0
-    call Square.draw 0
+    call Square.draw 1
     pop temp 0
     goto L0
 label L1
@@ -86,14 +87,14 @@ function Square.decSize 0
     not
     if-goto L3
     push pointer 0
-    call Square.erase 0
+    call Square.erase 1
     pop temp 0
     push this 2
     push constant 2
     sub
     pop this 2
     push pointer 0
-    call Square.draw 0
+    call Square.draw 1
     pop temp 0
     goto L2
 label L3
