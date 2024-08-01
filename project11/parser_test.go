@@ -116,12 +116,20 @@ func TestParser_ParseFile(t *testing.T) {
 				out:  "./test/Pong/Bat.an",
 			},
 		},
+		// {
+		// 	"11. ./Pong/PongGame.jack",
+		// 	fields{
+		// 		dest: "./test/Pong/PongGame.jack",
+		// 		want: "./test/Pong/PongGame.vm",
+		// 		out:  "./test/Pong/PongGame.an",
+		// 	},
+		// },
 		{
-			"11. ./Pong/PongGame.jack",
+			"12. ./ComplexArrays/Main.jack",
 			fields{
-				dest: "./test/Pong/PongGame.jack",
-				want: "./test/Pong/PongGame.vm",
-				out:  "./test/Pong/PongGame.an",
+				dest: "./test/ComplexArrays/Main.jack",
+				want: "./test/ComplexArrays/Main.vm",
+				out:  "./test/ComplexArrays/Main.an",
 			},
 		},
 	}

@@ -389,13 +389,20 @@ func (p *Parser) compileTerm2() {
 	case IDENT:
 		// state: identifier
 		identifier := p.lit
-		p.shouldPushToVariable(identifier)
-		p.lit = ""
-
 		p.next()
+
+		// in case of array a[i]
+		// push i to stack first then push a to stack
+		// for testing purpose only
+		// any order is ok
+		if p.lit != "[" {
+			p.shouldPushToVariable(identifier)
+		}
+
 		if p.lit == "[" {
 			p.next() // array expression
 			p.compileExpressions()
+			p.shouldPushToVariable(identifier)
 			p.vmWriter.WriteFormat("add\n")
 			p.vmWriter.WriteFormat("pop pointer 1\n")
 			p.vmWriter.WriteFormat("push that 0\n")
