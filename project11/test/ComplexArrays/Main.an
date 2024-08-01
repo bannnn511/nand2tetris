@@ -94,6 +94,7 @@ function Main.main 3
     push constant 0
     push local 2
     add
+    push constant 0
     pop temp 0
     pop pointer 1
     push temp 0
@@ -399,8 +400,10 @@ function Main.main 3
     pop temp 0
     call Output.println 0
     pop temp 0
+    push constant 0
     pop local 2
     push local 2
+    push constant 0
     eq
     not
     if-goto L1

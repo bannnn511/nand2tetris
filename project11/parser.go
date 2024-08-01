@@ -1,7 +1,6 @@
 package main
 
 import (
-	"fmt"
 	"strings"
 )
 
@@ -311,12 +310,12 @@ func (p *Parser) compileWhile() {
 
 // term(op term)*
 func (p *Parser) compileExpressions() {
-	p.compileTerm2() // term
+	p.compileTerm() // term
 	for p.tok == SYMBOL && IsOp(p.lit) {
 		// op
 		op := p.lit
 		p.next() // term
-		p.compileTerm2()
+		p.compileTerm()
 		p.vmWriter.WriteOp(op)
 	}
 }
@@ -352,10 +351,10 @@ func (p *Parser) shouldPopToVariable(name string) {
 	}
 }
 
-func (p *Parser) compileTerm2() {
+func (p *Parser) compileTerm() {
 	switch p.tok {
 	case INT:
-		p.vmWriter.WriteFormat(fmt.Sprintf("push constant %v\n", p.lit))
+		p.vmWriter.WriteInt(p.lit)
 		p.next()
 	case CHAR:
 		p.vmWriter.WriteString(p.lit)
@@ -382,6 +381,8 @@ func (p *Parser) compileTerm2() {
 			} else {
 				p.shouldPopToVariable(p.variableName)
 			}
+		case "null":
+			p.vmWriter.WriteInt("0")
 		default:
 			println("implement other keyword case", p.lit)
 		}
@@ -436,7 +437,7 @@ func (p *Parser) compileTerm2() {
 		} else if p.lit == "~" || p.lit == "-" {
 			op := p.lit
 			p.next()
-			p.compileTerm2()
+			p.compileTerm()
 			p.vmWriter.WriteOp(op)
 		}
 	case SYMBOL:
@@ -448,7 +449,7 @@ func (p *Parser) compileTerm2() {
 		} else if p.lit == "~" || p.lit == "-" {
 			op := p.lit
 			p.next()
-			p.compileTerm2()
+			p.compileTerm()
 			if op == "~" {
 				p.vmWriter.WriteFormat("not\n")
 			} else {

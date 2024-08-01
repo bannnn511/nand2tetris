@@ -134,6 +134,10 @@ func (w *VmWriter) WriteString(str string) {
 	}
 }
 
+func (w *VmWriter) WriteInt(value string) {
+	w.WriteFormat(fmt.Sprintf("push constant %v\n", value))
+}
+
 func (w *VmWriter) WritePopArrayExpression() {
 	w.WriteFormat("pop temp 0\n") // temp 0 = value of expression 2
 	// top stack value = arr[expression1]
