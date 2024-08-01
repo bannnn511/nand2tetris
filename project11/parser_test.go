@@ -76,11 +76,19 @@ func TestParser_ParseFile(t *testing.T) {
 			},
 		},
 		{
-			"6. ./Square/SquareGame.jack",
+			"7. ./Square/SquareGame.jack",
 			fields{
 				dest: "./test/Square/SquareGame.jack",
 				want: "./test/Square/SquareGame.vm",
 				out:  "./test/Square/SquareGame.an",
+			},
+		},
+		{
+			"8. ./Average/Average.jack",
+			fields{
+				dest: "./test/Average/Main.jack",
+				want: "./test/Average/Main.vm",
+				out:  "./test/Average/Main.an",
 			},
 		},
 	}

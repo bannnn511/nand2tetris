@@ -92,6 +92,9 @@ func (p *Parser) compileSubroutine() {
 		fieldCount := p.classSB.VarCount(Field)
 		staticCount := p.classSB.VarCount(Static)
 		paramCount = int(fieldCount + staticCount)
+	} else if routineLit == "function" {
+		varCount := p.routineSB.VarCount(Var)
+		paramCount += int(varCount)
 	}
 	p.vmWriter.WriteFunction(
 		routineLit,
@@ -193,7 +196,7 @@ func (p *Parser) compileDo() {
 		p.next()
 	} else if vType == ILLEGAL {
 		// method call
-		p.vmWriter.WriteWithIndentation("push pointer 0\n")
+		p.vmWriter.WriteFormat("push pointer 0\n")
 		fName = p.className + "." + fName
 		methodArg++
 	}
@@ -333,7 +336,7 @@ func (p *Parser) shouldPopToVariable(name string) {
 		p.vmWriter.WritePopVariable(kind, idx)
 	} else if p.routineSB.IsExists(name) {
 		if name == "this" {
-			p.vmWriter.WriteWithIndentation("pop pointer 0\n")
+			p.vmWriter.WriteFormat("pop pointer 0\n")
 		} else {
 			kind, idx := p.routineSB.GetSegment(name)
 			p.vmWriter.WritePopVariable(kind, idx)
@@ -344,10 +347,10 @@ func (p *Parser) shouldPopToVariable(name string) {
 func (p *Parser) compileTerm2() {
 	switch p.tok {
 	case INT:
-		p.vmWriter.WriteWithIndentation(fmt.Sprintf("push constant %v\n", p.lit))
+		p.vmWriter.WriteFormat(fmt.Sprintf("push constant %v\n", p.lit))
 		p.next()
 	case CHAR:
-		p.writeTemplate()
+		p.vmWriter.WriteString(p.lit)
 		p.next()
 	case KEYWORD:
 		switch p.lit {
@@ -362,12 +365,12 @@ func (p *Parser) compileTerm2() {
 		case "this":
 			// return this
 			if p.prev == "return" {
-				p.vmWriter.WriteWithIndentation("push pointer 0\n")
+				p.vmWriter.WriteFormat("push pointer 0\n")
 			}
 
 			// method call with 'this'
 			if p.prev == "(" {
-				p.vmWriter.WriteWithIndentation("push pointer 0\n")
+				p.vmWriter.WriteFormat("push pointer 0\n")
 			} else {
 				p.shouldPopToVariable(p.variableName)
 				p.variableName = ""
@@ -431,9 +434,9 @@ func (p *Parser) compileTerm2() {
 			p.next()
 			p.compileTerm2()
 			if op == "~" {
-				p.vmWriter.WriteWithIndentation("not\n")
+				p.vmWriter.WriteFormat("not\n")
 			} else {
-				p.vmWriter.WriteWithIndentation("neg\n")
+				p.vmWriter.WriteFormat("neg\n")
 			}
 		}
 	default:
@@ -443,7 +446,6 @@ func (p *Parser) compileTerm2() {
 // <expressionList>
 func (p *Parser) compileExpressionList() int {
 	count := 0
-
 	if p.tok != SYMBOL && p.lit != ")" {
 		count++
 		p.compileExpressions2()

@@ -29,10 +29,10 @@ func (w *VmWriter) WriteFunction(
 
 	if routine == "constructor" {
 		pushArg := fmt.Sprintf("push constant %d\n", params)
-		w.WriteWithIndentation(pushArg)
+		w.WriteFormat(pushArg)
 
-		w.WriteWithIndentation("call Memory.alloc 1\n")
-		w.WriteWithIndentation("pop pointer 0\n")
+		w.WriteFormat("call Memory.alloc 1\n")
+		w.WriteFormat("pop pointer 0\n")
 	}
 }
 
@@ -117,6 +117,16 @@ func (w *VmWriter) WriteOp(op string) {
 	}
 }
 
+func (w *VmWriter) WriteString(str string) {
+	w.WriteFormat(fmt.Sprintf("push constant %d\n", len(str)))
+	w.WriteFormat("call String.new 1\n")
+
+	for _, ch := range str {
+		w.WriteFormat(fmt.Sprintf("push constant %d\n", ch))
+		w.WriteFormat("call String.appendChar 2\n")
+	}
+}
+
 func (w *VmWriter) WriteLabel(label int) {
 	w.out.WriteString(fmt.Sprintf("label L%d\n", label))
 }
@@ -158,13 +168,11 @@ func (w *VmWriter) Out() string {
 	return w.out.String()
 }
 
-func (w *VmWriter) WriteWithIndentation(str string) {
+func (w *VmWriter) WriteFormat(str string) {
 	w.WriteIndentation(4)
 	w.Write(str)
 }
 
 func (w *VmWriter) WriteIndentation(indent int) {
-	for i := 0; i < indent; i++ {
-		w.Write(" ")
-	}
+	w.Write(fmt.Sprintf("%*s", indent, ""))
 }
