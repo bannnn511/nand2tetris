@@ -80,7 +80,7 @@ func (p *Parser) compileSubroutine() {
 	p.next()
 	paramCount := p.compileParameterList() // parameters
 	// state: ')'
-	p.next() // state: '{'
+	p.next() // '{'
 
 	p.next()
 	for p.lit == "var" {
@@ -88,6 +88,11 @@ func (p *Parser) compileSubroutine() {
 	}
 
 	count := p.routineSB.VarCount(Var)
+	if routineLit == "constructor" {
+		fieldCount := p.classSB.VarCount(Field)
+		staticCount := p.classSB.VarCount(Static)
+		paramCount = int(fieldCount + staticCount)
+	}
 	p.vmWriter.WriteFunction(
 		routineLit,
 		fName,
@@ -171,7 +176,10 @@ func (p *Parser) compileDo() {
 
 	// ILLEGAL should be language standard library
 	if vType == ILLEGAL {
-		fName = variableName
+		fName, vType = p.classSB.TypeOf(variableName)
+		if vType == ILLEGAL {
+			fName = variableName
+		}
 	}
 
 	p.next() // '.' or '('
@@ -391,6 +399,9 @@ func (p *Parser) compileTerm2() {
 
 			nVars := p.compileExpressionList()
 			vKind := p.routineSB.KindOf(p.variableName)
+			if vKind == Undefined {
+				vKind = p.classSB.KindOf(p.variableName)
+			}
 			index := p.routineSB.IndexOf(p.variableName)
 
 			p.vmWriter.WriteDoWithReturn(fName, nVars, vKind.String(), index)

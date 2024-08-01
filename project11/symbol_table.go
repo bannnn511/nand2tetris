@@ -82,7 +82,12 @@ func (sb *SymbolTable) TypeOf(name string) (string, Token) {
 
 // KindOf returns variable kind
 func (sb *SymbolTable) KindOf(name string) VariableKind {
-	return sb.m[name].kind
+	v, ok := sb.m[name]
+	if !ok {
+		return Undefined
+	}
+
+	return v.kind
 }
 
 // GetSegment returns variable kind and index
