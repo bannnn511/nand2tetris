@@ -117,6 +117,8 @@ func (w *VmWriter) WriteOp(op string) {
 		w.Write("eq\n")
 	case "&":
 		w.Write("and\n")
+	case "|":
+		w.Write("or\n")
 	default:
 		w.Write(op + "\n")
 	}

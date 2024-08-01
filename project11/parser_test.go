@@ -92,6 +92,38 @@ func TestParser_ParseFile(t *testing.T) {
 				out:  "./test/Average/Main.an",
 			},
 		},
+		{
+			"9. ./Pong/Main.jack",
+			fields{
+				dest: "./test/Pong/Main.jack",
+				want: "./test/Pong/Main.vm",
+				out:  "./test/Pong/Main.an",
+			},
+		},
+		{
+			"10. ./Pong/Ball.jack",
+			fields{
+				dest: "./test/Pong/Ball.jack",
+				want: "./test/Pong/Ball.vm",
+				out:  "./test/Pong/Ball.an",
+			},
+		},
+		{
+			"10. ./Pong/Bat.jack",
+			fields{
+				dest: "./test/Pong/Bat.jack",
+				want: "./test/Pong/Bat.vm",
+				out:  "./test/Pong/Bat.an",
+			},
+		},
+		{
+			"11. ./Pong/PongGame.jack",
+			fields{
+				dest: "./test/Pong/PongGame.jack",
+				want: "./test/Pong/PongGame.vm",
+				out:  "./test/Pong/PongGame.an",
+			},
+		},
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
