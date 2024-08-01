@@ -59,6 +59,9 @@ func (w *VmWriter) WriteDoWithReturn(
 	do := fmt.Sprintf("call %v %d\n", fName, nVars)
 	w.out.WriteString(do)
 
+	if variableKind == Undefined.String() {
+		return
+	}
 	w.WriteIndentation(4)
 	popTo := fmt.Sprintf("pop %v %d\n", variableKind, index)
 	w.out.WriteString(popTo)
@@ -98,6 +101,8 @@ func (w *VmWriter) WriteOp(op string) {
 	switch op {
 	case "*":
 		w.Write("call Math.multiply 2\n")
+	case "/":
+		w.Write("call Math.divide 2\n")
 	case "+":
 		w.Write("add\n")
 	case "-":
@@ -125,6 +130,14 @@ func (w *VmWriter) WriteString(str string) {
 		w.WriteFormat(fmt.Sprintf("push constant %d\n", ch))
 		w.WriteFormat("call String.appendChar 2\n")
 	}
+}
+
+func (w *VmWriter) WritePopArrayExpression() {
+	w.WriteFormat("pop temp 0\n") // temp 0 = value of expression 2
+	// top stack value = arr[expression1]
+	w.WriteFormat("pop pointer 1\n")
+	w.WriteFormat("push temp 0\n")
+	w.WriteFormat("pop that 0\n")
 }
 
 func (w *VmWriter) WriteLabel(label int) {

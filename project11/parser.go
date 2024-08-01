@@ -159,7 +159,7 @@ func (p *Parser) compileReturn() {
 	// return
 	p.next()
 	if p.tok != SYMBOL && p.lit != ";" {
-		p.compileExpressions2()
+		p.compileExpressions()
 	} else {
 		p.vmWriter.WriteIndentation(4)
 		p.vmWriter.out.WriteString("push constant 0\n")
@@ -220,7 +220,7 @@ func (p *Parser) compileIf() {
 	// state:if
 	p.next() // '('
 	p.next() // exp
-	p.compileExpressions2()
+	p.compileExpressions()
 
 	l1 := p.vmWriter.GetLabelIdx()
 	l2 := p.vmWriter.GetLabelIdx()
@@ -254,24 +254,32 @@ func (p *Parser) compileIf() {
 }
 
 // <letStatement>
+// handle array for case arr[expression1] = expression2
 func (p *Parser) compileLet() {
 	// state: let
 
 	p.next() // state: varName
 	p.variableName = p.lit
 
-	p.next() // state: =
+	p.next() // '=' or '['
+	isArray := false
 	if p.lit == "[" {
-		p.writeTemplate() // [
-		p.next()
-		p.compileExpressions2()
-		p.writeTemplate() // ]
+		isArray = true
+		p.next()                               // array index
+		p.compileExpressions()                 // compute expression 1
+		p.shouldPushToVariable(p.variableName) // push arr
+		p.variableName = ""                    // set empty so that pop dont need for this case
+		p.vmWriter.WriteFormat("add\n")        // top stack value = arr[expression1]
+		// state: ']'
 		p.next()
 	}
 
 	p.next() // state:
-	p.compileExpressions2()
+	p.compileExpressions()
 	p.shouldPopToVariable(p.variableName)
+	if isArray {
+		p.vmWriter.WritePopArrayExpression()
+	}
 	p.variableName = ""
 
 	p.next()
@@ -287,7 +295,7 @@ func (p *Parser) compileWhile() {
 
 	p.next() // state: '('
 	p.next() // state: ')'
-	p.compileExpressions2()
+	p.compileExpressions()
 
 	p.vmWriter.WriteIf(l2)
 	p.next() // state: {
@@ -302,7 +310,7 @@ func (p *Parser) compileWhile() {
 }
 
 // term(op term)*
-func (p *Parser) compileExpressions2() {
+func (p *Parser) compileExpressions() {
 	p.compileTerm2() // term
 	for p.tok == SYMBOL && IsOp(p.lit) {
 		// op
@@ -373,7 +381,6 @@ func (p *Parser) compileTerm2() {
 				p.vmWriter.WriteFormat("push pointer 0\n")
 			} else {
 				p.shouldPopToVariable(p.variableName)
-				p.variableName = ""
 			}
 		default:
 			println("implement other keyword case", p.lit)
@@ -387,10 +394,12 @@ func (p *Parser) compileTerm2() {
 
 		p.next()
 		if p.lit == "[" {
-			p.writeTemplate()
-			p.next()
-			p.compileExpressions2()
-			p.writeTemplate()
+			p.next() // array expression
+			p.compileExpressions()
+			p.vmWriter.WriteFormat("add\n")
+			p.vmWriter.WriteFormat("pop pointer 1\n")
+			p.vmWriter.WriteFormat("push that 0\n")
+			// state: ']'
 			p.next()
 		} else if p.lit == "." {
 			// state: '.'
@@ -427,7 +436,7 @@ func (p *Parser) compileTerm2() {
 		if p.lit == "(" {
 			p.writeTemplate() // symbol
 			p.next()          // symbol
-			p.compileExpressions2()
+			p.compileExpressions()
 			p.next()
 		} else if p.lit == "~" || p.lit == "-" {
 			op := p.lit
@@ -448,23 +457,23 @@ func (p *Parser) compileExpressionList() int {
 	count := 0
 	if p.tok != SYMBOL && p.lit != ")" {
 		count++
-		p.compileExpressions2()
+		p.compileExpressions()
 		for p.tok == SYMBOL && p.lit == "," {
 			// symbol ','
 			p.next()
-			p.compileExpressions2()
+			p.compileExpressions()
 			count++
 		}
 	}
 
 	// if after '(' is a '(' -> new expression
 	if p.lit == "(" {
-		p.compileExpressions2()
+		p.compileExpressions()
 		count++
 		for p.tok == SYMBOL && p.lit == "," {
 			// symbol
 			p.next()
-			p.compileExpressions2()
+			p.compileExpressions()
 			count++
 		}
 	}

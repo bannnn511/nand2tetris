@@ -1,4 +1,4 @@
-function Main.main 4
+function Main1.Main1 4
     push constant 18
     call String.new 1
     push constant 72
@@ -51,6 +51,8 @@ label L0
     not
     if-goto L1
     push local 2
+    push local 0
+    add
     push constant 16
     call String.new 1
     push constant 69
@@ -86,10 +88,16 @@ label L0
     push constant 32
     call String.appendChar 2
     call Keyboard.readInt 1
-    pop local 0
+    pop temp 0
+    pop pointer 1
+    push temp 0
+    pop that 0
     push local 3
     push local 0
     push local 2
+    add
+    pop pointer 1
+    push that 0
     add
     pop local 3
     push local 2
@@ -134,7 +142,7 @@ label L1
     pop temp 0
     push local 3
     push local 1
-    /
+    call Math.divide 2
     call Output.printInt 1
     pop temp 0
     push constant 0

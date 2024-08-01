@@ -19,6 +19,7 @@ class if2 {
 
     	let loop = true;
 		let position = position + 1;
+
 	    if (~(position > 16)) {
             if (~((value & mask) = 0)) {
                 do Memory.poke(8000 + position, 1);

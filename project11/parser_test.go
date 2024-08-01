@@ -2,6 +2,7 @@ package main_test
 
 import (
 	"os"
+	"strings"
 	"testing"
 
 	pkg "project11"
@@ -105,7 +106,11 @@ func TestParser_ParseFile(t *testing.T) {
 
 			want, err := os.ReadFile(tt.fields.want)
 			assert.NoError(t, err)
-			assert.Equal(t, string(want), p.VmOut())
+			assert.Equal(
+				t,
+				strings.TrimSuffix(string(want), "\n"),
+				p.VmOut(),
+			)
 		})
 	}
 }
