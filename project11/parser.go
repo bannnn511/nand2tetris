@@ -89,8 +89,7 @@ func (p *Parser) compileSubroutine() {
 	count := p.routineSB.VarCount(Var)
 	if routineLit == "constructor" {
 		fieldCount := p.classSB.VarCount(Field)
-		staticCount := p.classSB.VarCount(Static)
-		paramCount = int(fieldCount + staticCount)
+		paramCount = int(fieldCount)
 	} else if routineLit == "function" {
 		varCount := p.routineSB.VarCount(Var)
 		paramCount += int(varCount)
@@ -103,30 +102,24 @@ func (p *Parser) compileSubroutine() {
 	)
 
 	// if subroutine is method
-	// the caller must push the refernce to the opbbject
+	// the caller must push the reference to the object
 	if routineLit == "method" {
 		p.shouldPushToVariable("this")
 		p.shouldPopToVariable("this")
 	}
 
 	p.compileStatements()
-
-	p.writeTemplate() // symbol
-
 	p.next()
 }
 
 func (p *Parser) compileParameterList() int {
 	count := 0
 	for p.tok != SYMBOL {
-		// p.writeTemplate()
 		p.next()
 
 		p.defineVariable(Subroutine, p.lit, p.prev, Arg)
-		p.writeTemplate()
 		p.next()
 		if p.lit == "," {
-			p.writeTemplate()
 			p.next()
 		}
 		count++
@@ -201,12 +194,16 @@ func (p *Parser) compileDo() {
 	}
 
 	p.next() // expressions
+
+	if vType == USR {
+		p.shouldPushToVariable(variableName)
+	}
+
 	nVars := p.compileExpressionList()
 	p.next() // state: ';'
 
 	// if vType is USR -> method function call
 	if vType == USR {
-		p.shouldPushToVariable(variableName)
 		nVars++
 	}
 
@@ -413,16 +410,32 @@ func (p *Parser) compileTerm() {
 			// state: '.'
 			fName := identifier + p.lit
 			p.next() // state: identifier
-			fName += p.lit
+			methodName := p.lit
+			fName += methodName
 			p.next() // state: symbol
 			p.next()
 
 			nVars := p.compileExpressionList()
 			vKind := p.routineSB.KindOf(p.variableName)
+			index := p.routineSB.IndexOf(p.variableName)
 			if vKind == Undefined {
 				vKind = p.classSB.KindOf(p.variableName)
+				index = p.classSB.IndexOf(p.variableName)
 			}
-			index := p.routineSB.IndexOf(p.variableName)
+
+			// if caller is a user class
+			vType, typeTok := p.classSB.TypeOf(identifier)
+			if typeTok == USR {
+				fName = vType + "." + methodName
+				nVars++ // for 'this' pointer
+				oldKind := vKind
+				vKind = p.classSB.KindOf(p.variableName)
+				if vKind == Undefined {
+					vKind = oldKind
+				} else {
+					index = p.classSB.IndexOf(p.variableName)
+				}
+			}
 
 			p.vmWriter.WriteDoWithReturn(fName, nVars, vKind.String(), index)
 			p.variableName = ""
@@ -430,7 +443,6 @@ func (p *Parser) compileTerm() {
 			// state: symbol
 			p.next()
 		} else if p.lit == "(" {
-			p.writeTemplate() // symbol
 			p.compileExpressionList()
 			p.next() // symbol
 			p.next()
@@ -442,8 +454,7 @@ func (p *Parser) compileTerm() {
 		}
 	case SYMBOL:
 		if p.lit == "(" {
-			p.writeTemplate() // symbol
-			p.next()          // symbol
+			p.next() // symbol
 			p.compileExpressions()
 			p.next()
 		} else if p.lit == "~" || p.lit == "-" {
@@ -549,30 +560,6 @@ func (p *Parser) next() {
 	p.prev = p.lit
 	p.lit = lit
 	p.elements = append(p.elements, Ast{tok, lit})
-}
-
-// writeTemplate writes KEYWORD, IDENT and SYMBOL token
-func (p *Parser) writeTemplate() {
-	if p.tok == EOF {
-		return
-	}
-
-	if p.tok == SYMBOL {
-		// p.writeSymbol()
-		return
-	}
-
-	if p.tok == INT {
-		// p.write(fmt.Sprintf(template, "integerConstant", p.lit, "integerConstant"))
-		return
-	}
-
-	if p.tok == CHAR {
-		// p.write(fmt.Sprintf(template, "stringConstant", p.lit, "stringConstant"))
-		return
-	}
-
-	// p.write(fmt.Sprintf(template, p.tok, p.lit, p.tok))
 }
 
 func (p *Parser) VmOut() string {

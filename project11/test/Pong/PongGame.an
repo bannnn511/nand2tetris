@@ -1,5 +1,5 @@
 function PongGame.new 0
-    push constant 8
+    push constant 7
     call Memory.alloc 1
     pop pointer 0
     call Screen.clearScreen 0
@@ -19,10 +19,10 @@ function PongGame.new 0
     push constant 0
     push constant 229
     call Ball.new 6
-    pop this 0
+    pop this 1
+    push this 1
     push constant 400
     push constant 0
-    push this 1
     call Ball.setDestination 3
     pop temp 0
     push constant 0
@@ -122,8 +122,8 @@ label L3
     eq
     not
     if-goto L5
-    push constant 1
     push this 0
+    push constant 1
     call Bat.setDirection 2
     pop temp 0
     goto L4
@@ -133,8 +133,8 @@ label L5
     eq
     not
     if-goto L7
-    push constant 2
     push this 0
+    push constant 2
     call Bat.setDirection 2
     pop temp 0
     goto L6
@@ -215,8 +215,8 @@ function PongGame.moveBall 5
     push argument 0
     pop pointer 0
     push this 1
-    call ball.move 0
-    pop this 0
+    call Ball.move 1
+    pop this 2
     push this 2
     push constant 0
     gt
@@ -232,16 +232,16 @@ function PongGame.moveBall 5
     push constant 0
     pop local 0
     push this 0
-    call bat.getLeft 0
+    call Bat.getLeft 1
     pop local 1
     push this 0
-    call bat.getRight 0
+    call Bat.getRight 1
     pop local 2
     push this 1
-    call ball.getLeft 0
+    call Ball.getLeft 1
     pop local 3
     push this 1
-    call ball.getRight 0
+    call Ball.getRight 1
     pop local 4
     push this 2
     push constant 4
@@ -289,8 +289,8 @@ label L20
     push constant 2
     sub
     pop this 6
-    push this 6
     push this 0
+    push this 6
     call Bat.setWidth 2
     pop temp 0
     push this 4
@@ -310,8 +310,8 @@ label L18
     goto L16
 label L17
 label L16
-    push local 0
     push this 1
+    push local 0
     call Ball.bounce 2
     pop temp 0
     goto L14
