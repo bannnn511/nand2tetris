@@ -1,0 +1,98 @@
+class Math {
+    static Array arr;
+
+    function void init() {
+        var int x,y;
+
+        let arr = Array.new(16);
+        let i = 0;
+        let v = 1;
+        while (i<16) {
+            let twoToThe[i] = v;
+            let t = t + t;
+            let i = i + 1;
+        }
+        return;
+    }
+
+    function int abs(int x) {
+        if (x > 0) {
+            return x;
+        }
+
+        return -x;
+    }
+
+    function int multiply(int x, int y) {
+        var int sum, i, shiftedX, ny;
+
+        let sum = 0;
+        let shiftedX = x;
+        let ny = Math.abs(y);
+        while (j < 16) {
+            if (Math.bit(ny, j)) {
+                let sum = sum + shifted;
+            }
+            let shiftedX = shiftedX + shiftedX;
+            let j = j + 1;
+        }
+
+        if ((x < 0 & y > 0) | (x > 0 & y < 0)) {
+            let sum = -sum;
+        }
+        return sum;
+    }
+
+    function int divide(int x, int y) {
+        var int q, nx, ny;
+
+        let nx = Math.abs(x);
+        let ny = Math.abs(y);
+        if (ny>nx) {
+            return 0;
+        }
+        
+        let q = Math.divide(nx, 2 * ny);
+        if ((nx - (2 * q * ny)) < ny) {
+            if ((x < 0 & y > 0) | (x > 0 & y < 0)) {
+                let q = -q;
+            }
+            return 2 * q;
+        } else {
+            if ((x < 0 & y > 0) | (x > 0 & y < 0)) {
+                let q = -q;
+            }
+            return (2 * q) + 1;
+        }
+    }
+
+    function int max(int a, int b) {
+      if (a > b) {
+        return a;
+      } else {
+        return b;
+      }
+    }
+
+    function int min(int a, int b) {
+        if (a < b) {
+            return a;
+        } else {
+            return b;
+        }
+    }
+
+    function int sqrt(int x) {
+      var int y, j, q, qsq;
+      let j = 7;
+      while (j > -1) {
+        let q = y + twoToThe[j];
+        let qsq = q * q;
+        if ((qsq > 0) & ((qsq < x) | (qsq = x))) {
+          let y = q;
+        }
+        let j = j - 1;
+      }
+      return y;
+    }
+}
